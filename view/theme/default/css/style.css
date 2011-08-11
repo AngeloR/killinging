@@ -1,0 +1,202 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-o-box-sizing: border-box;
+	box-sizing: border-box;
+	font-family: 'Droid Sans', sans-serif;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.thegame {
+	width: 960px;
+	margin: 0 auto;
+}
+h1 {
+	font-family: 'Reenie Beanie', cursive;
+	font-size: 2em;
+	font-weight: bold;
+}
+.thegame td {
+	border: solid 0 #000;
+}
+.sidebar {
+	width: 25%;
+}
+#content, #stats {
+	border-width: 0 1px;
+}
+#footer {
+	font-size: 0.75em;
+	text-align: center;
+	padding: 5px;
+	border-width: 1px 0 0;
+}
+.help {
+	font-size: 0.75em;
+}
+
+/** MAP **/
+#location {
+	font-size: 0.833em;
+	display: inline;
+}
+#map {
+	text-align: center;
+	margin: 0 auto;
+}
+#map td {
+	border: solid 1px #000;
+}
+#map td {
+	width: 60px;
+	height: 60px;
+	text-align: center;
+	vertical-align: middle;
+}
+#map-arrow-thing {
+	width: 100%;
+	height: 100%;
+	position: relative;
+}
+#map-title {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+/** MENU **/
+#menu {
+	width: 100%;
+}
+#menu li {
+	display: inline-block;
+	border: solid 0 #666;
+	border-width: 0 0 1px 0;
+}
+#menu .active {
+	font-weight: bold;
+	border-width: 1px 1px 0;
+}
+#menu a {
+	display: inline-block;
+	padding: 5px 12px;
+	font-weight: normal;
+}
+
+/** MODAL **/
+#simplemodal-data {
+	border: solid 1px #000;
+	background-color: #eee;
+	cursor: default;
+}
+#simplemodal-container .title {
+	background-color: #333;
+	color: #fff;
+	font-weight: bold;
+	padding: 5px;
+}
+.modal-info th, .modal-info td{
+	padding: 3px 5px 3px 0;
+	text-align: left;
+}
+.modal-info th {
+	font-weight: bold;
+	padding-left: 5px;
+}
+a.modalCloseImg {
+	background: url('../images/x.png') no-repeat;
+	width: 25px;
+	height: 25px;
+	display: block;
+	z-index: 3200;
+	position: absolute;
+	top: -15px;
+	right: -18px;
+	cursor: pointer;
+}
+
+/** DIRECTIONS **/
+#s,#n,#se,#sw,#ne,#nw,#e,#w,#player {
+	position: absolute;
+	z-index: 2;
+}
+#nw {
+	left: 0;
+	top: 0;
+}
+#n {
+	left: 22px;
+	top: 0;
+}
+#ne {
+	right: 0;
+	top: 0;
+}
+#w {
+	top: 20px;
+	left: 0;
+}
+#player {
+	top: 20px;
+	right: 23px;
+}
+#e {
+	top: 20px;
+	right: 0;
+}
+#sw {
+	bottom: 0;
+	left: 0;
+}
+#s {
+	bottom: 0;
+	left: 22px;
+}
+#se {
+	bottom: 0;
+	right: 0;
+}
