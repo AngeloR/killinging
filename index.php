@@ -65,6 +65,9 @@ dispatch_get('/move/:dir','movement_handler');
 dispatch_post('/fight','fight_handler');
 dispatch_get('/item/info/:id','get_item_info');
 dispatch_get('/building/info/:id','get_building_info');
+dispatch_post('/inventory/:id','buy_item');
+
+dispatch_get('/inventory','get_inventory');
 
 function homepage() {
 	$classes = R::find('class','1 order by name asc');
@@ -295,6 +298,44 @@ function get_item_info($id) {
 function get_building_info($id) {
 	$building = R::findOne('building_type','id = ?',array($id));
 	return json($building->tojson());
+}
+
+function buy_item() {
+	$item = R::findOne('item','id = ?',array($_POST['item_id']));
+	$player = unserialize($_SESSION['player']);
+	
+	// check if store is owners store
+	
+	if(($player->gold - $item->cost) >= 0 ) {
+		// can buy item
+		$player->gold -= $item->cost;
+		$owned_item = R::dispense('owned_item');
+		// copy from bean
+		$owned_item->import($item->export(),'name,cost,level,str,def,agi,luck');
+		$owned_item->owner = $player->id;
+		$owned_item->equipped = false;
+		$owned_item->cost *= 0.5;
+		
+		R::store($owned_item);// add item to inventory
+		R::store($player);		// save new player info
+		R::trash($item);			// remove item from stores
+		
+		$_SESSION['player'] = serialize($player);
+		
+		return json(array(
+			'gold' => $player->gold
+		));
+	}
+	else {
+		return json(array((bool)false));
+	}
+}
+
+function get_inventory() {
+	$player = unserialize($_SESSION['player']);
+	$owned_items = R::find('owned_item','owner = ?',array($player->id));
+	
+	return json($owned_items);
 }
 
 run();

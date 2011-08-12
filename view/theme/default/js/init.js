@@ -4,12 +4,17 @@ sandbox.register_module('ui', util.extend({
 	, initialize: function() {
 		$('#menu').tabify();
 		
+		$('#menu a').click(function(){
+			nobi.notify($(this).attr('href').split('#')[1]);
+		});
+		
 		$.modal.defaults.minWidth = 325;
 		$.modal.defaults.maxWidth = 325;
+		$.modal.defaults.minHeight = null;
 	}
 }, sandbox.module));
 
-sandbox.register_module('item-info',util.extend({
+sandbox.register_module('item',util.extend({
 	title: 'Item Info'
 	, description: 'Loads item info into simple modal'
 	, render: function(res) {
@@ -34,11 +39,28 @@ sandbox.register_module('item-info',util.extend({
 				, type: 'get'
 				, success: function(res) {
 					
-					$.modal(sandbox.request_module('item-info').render(res), {
+					$.modal(sandbox.request_module('item').render(res), {
 						
 					});
 				}
 			});
+		});
+		
+		$('.buy').click(function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			
+			$.ajax({
+				url: $(this).attr('href').split('/inventory')[0]+'/inventory'
+				, dataType: 'json'
+				, type: 'post'
+				, data: {item_id: $(this).attr('href').split('/inventory')[1]}
+				, success: function(res){ 
+					if(gold) {
+						$('#gold').html(res.gold);
+					}
+				}
+			})
 		});
 	}
 }, sandbox.module));
@@ -122,5 +144,38 @@ sandbox.register_module('building-info', util.extend({
 				}
 			})
 		});
+	}
+}, sandbox.module));
+
+sandbox.register_module('inventory', util.extend({
+	title: 'Inventory Manager'
+	, description: 'Handles loading of inventory'
+	, load: function(items) {
+		console.log(items);
+	}
+	, add_item_to_list: function(item) {
+		var tmp = '<tr><td><a href="#" class="item-info">'+item.name+'</a></td></tr>';
+		
+		return tmp;
+	}
+	, initialize: function() {
+		nobi.bind('new-item', function(item) {
+			this.load(item);
+		}, this);
+		
+		
+		nobi.bind('inventory-tab', function(){
+			$.ajax({
+				url: 'index.php/?/inventory'
+				, dataType: 'json'
+				, type: 'get'
+				, success: function(res) {
+					if(res) {
+						sandbox.request_module('inventory').load(res);
+					}
+				}
+			});
+		})
+		
 	}
 }, sandbox.module));

@@ -49,7 +49,7 @@
 					
 					
 					<div id="inventory">
-						This will list all of your items
+						
 					</div>
 					
 					
