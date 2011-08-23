@@ -70,6 +70,11 @@ h1 {
 #content, #stats {
 	border-width: 0 1px;
 }
+#content {
+	max-height: 450px;
+	overflow: auto;
+	height: 450px;
+}
 #footer {
 	font-size: 0.75em;
 	text-align: center;

@@ -10,6 +10,7 @@ include('model/city.php');
 include('model/building.php');
 include('model/store.php');
 include('model/item.php');
+include('model/owned.php');
 
 function configure() {
 	appinit();
@@ -64,6 +65,7 @@ dispatch_get('/game','game');
 dispatch_get('/move/:dir','movement_handler');
 dispatch_post('/fight','fight_handler');
 dispatch_get('/item/info/:id','get_item_info');
+dispatch_get('/inventory/info/:id','get_inventory_info');
 dispatch_get('/building/info/:id','get_building_info');
 dispatch_post('/inventory/:id','buy_item');
 
@@ -128,7 +130,7 @@ function game() {
 	$city = R::findOne('city','id = ?',array($player->city));
 	set('city',$city);
 	
-	$monsters = R::find('monster','1 order by level asc');
+	$monsters = R::find('monster','1 order by level asc, name asc');
 	set('monsters',$monsters);
 	
 	$buildings = R::find('building_type','1 order by cost asc');
@@ -179,6 +181,12 @@ function movement_handler($dir) {
 	}
 	
 	if($player->getMeta('tainted')) {
+		// Check to see if the player should find a random item or not.
+		// This will be based on luck and the "wood/stone" skill. You 
+		// can only find wood OR stone on each step.
+		// The amount of wood or stone you find is dependent on your skill in that 
+		// particular stat.
+		
 		R::store($player);
 		$_SESSION['player'] = serialize($player);
 	}
@@ -249,6 +257,8 @@ function fight_handler() {
 	 $monster = R::findOne('monster','id = ?',array($_POST['monster_id']));
 	 if(!empty($monster)) {
 	 		$player = unserialize($_SESSION['player']);
+	 		// store the monster as the most recent battle
+	 		$player->last_battled = $monster->id;
 	 		
 	 		if($player->current_hp > 0) {
 	 			list($winner,$rounds,$messages) = fight_club($player,$monster);
@@ -302,6 +312,7 @@ function get_building_info($id) {
 
 function buy_item() {
 	$item = R::findOne('item','id = ?',array($_POST['item_id']));
+	$store = R::findOne('store','id = ?',array($item->store_id));
 	$player = unserialize($_SESSION['player']);
 	
 	// check if store is owners store
@@ -312,9 +323,6 @@ function buy_item() {
 		$owned_item = R::dispense('owned_item');
 		// copy from bean
 		$owned_item->import($item->export(),'name,cost,level,str,def,agi,luck');
-		$owned_item->owner = $player->id;
-		$owned_item->equipped = false;
-		$owned_item->cost *= 0.5;
 		
 		R::store($owned_item);// add item to inventory
 		R::store($player);		// save new player info
@@ -335,7 +343,18 @@ function get_inventory() {
 	$player = unserialize($_SESSION['player']);
 	$owned_items = R::find('owned_item','owner = ?',array($player->id));
 	
-	return json($owned_items);
+	$tmp = array();
+	foreach($owned_items as $item) {
+		$tmp[] = $item->tojson();
+	}
+	
+	return json($tmp);
+}
+
+function get_inventory_info($id) {
+	$item = R::findOne('owned_item','id = ?',array($id));
+	
+	return json($item->tojson());
 }
 
 run();

@@ -34,12 +34,17 @@ class StoreInterface{
 		echo $this->name.(($this->owner == $player->id)?' <span class="help">(Your Store)</span>':'').'<br>';
 		
 		
-		$itmes = R::find('item','store_id = ?',array($this->id));
+		$items = R::find('item','store_id = ?',array($this->id));
 		
-		echo '<table class="shop-list"><tr><th class="name">Item</th><th class="price">Price</th><th class="action"></th>';
-		foreach($itmes as $item) {
-			echo '<tr><td class="name">'.$item->name.'</td><td class="price">'.(($this->owner == $player->id)?0:$item->cost).'</td><td class="action"><a href="'.url_for('item','info',$item->id).'" class="item-info">info</a> | <a href="'.url_for('inventory',$item->id).'" class="buy">buy</a></td></tr>';
+		if(!empty($items)) {
+			echo '<table class="shop-list"><tr><th class="name">Item</th><th class="price">Price</th><th class="action"></th>';
+			foreach($items as $item) {
+				echo '<tr><td class="name">'.$item->name.'</td><td class="price">'.(($this->owner == $player->id)?0:$item->cost).'</td><td class="action"><a href="'.url_for('item','info',$item->id).'" class="item-info">info</a> | <a href="'.url_for('inventory',$item->id).'" class="buy">buy</a></td></tr>';
+			}
+			echo '</table>';
 		}
-		echo '</table>';
+		else {
+			echo 'This store currently has no items.';
+		}
 	}
 }

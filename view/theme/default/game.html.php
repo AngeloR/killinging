@@ -96,7 +96,12 @@
 							<form action="<?php echo url_for('fight');?>" method="post" id="fight-form">
 								<select name="monster" id="monster">
 									<?php foreach($monsters as $monster):?>
+										<?php if($monster->id == $player->last_battled): ?>
+										<option value="<?php echo $monster->id; ?>" selected="selected"><?php echo $monster->name; ?></option>
+										<?php else: ?>
 										<option value="<?php echo $monster->id; ?>"><?php echo $monster->name; ?></option>
+										<?php endif; ?>
+										
 									<?php endforeach; ?>
 								</select>
 								<button type="submit">Fight</button>

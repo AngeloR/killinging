@@ -46,6 +46,23 @@ sandbox.register_module('item',util.extend({
 			});
 		});
 		
+		$('.inventory-info').live('click', function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			
+			$.ajax({
+				url: $(this).attr('href')
+				, dataType: 'json'
+				, type: 'get'
+				, success: function(res) {
+					
+					$.modal(sandbox.request_module('item').render(res), {
+						
+					});
+				}
+			});
+		});
+		
 		$('.buy').click(function(e){
 			e.preventDefault();
 			e.stopPropagation();
@@ -152,9 +169,15 @@ sandbox.register_module('inventory', util.extend({
 	, description: 'Handles loading of inventory'
 	, load: function(items) {
 		console.log(items);
+		var tmp = '<table>';
+		for(var i = 0, l = items.length; i < l; ++i) {
+			tmp += this.add_item_to_list(items[i]);
+		}
+		tmp += '</table>';
+		$('#inventory').html(tmp);
 	}
 	, add_item_to_list: function(item) {
-		var tmp = '<tr><td><a href="#" class="item-info">'+item.name+'</a></td></tr>';
+		var tmp = '<tr><td><a href="index.php/?/inventory/info/'+item.id+'" class="inventory-info">'+item.name+'</a></td></tr>';
 		
 		return tmp;
 	}
@@ -162,7 +185,6 @@ sandbox.register_module('inventory', util.extend({
 		nobi.bind('new-item', function(item) {
 			this.load(item);
 		}, this);
-		
 		
 		nobi.bind('inventory-tab', function(){
 			$.ajax({
@@ -177,5 +199,16 @@ sandbox.register_module('inventory', util.extend({
 			});
 		})
 		
+	}
+}, sandbox.module));
+
+sandbox.register_module('movement', util.extend({
+	title: 'Movement Manager'
+	, description: 'Handles movement and redrawing the map'
+	, move: function() {
+		
+	}
+	, initialize: function() {
+		// grab the key presses!
 	}
 }, sandbox.module));
