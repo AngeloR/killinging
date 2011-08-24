@@ -14,6 +14,37 @@ sandbox.register_module('ui', util.extend({
 	}
 }, sandbox.module));
 
+sandbox.register_module('store', util.extend({
+	title: 'Store manager'
+	, description: 'Handles store management'
+	, add_to_store: function(id,price) {
+		$.ajax({
+			url: 'index.php/?/store/add'
+			, dataType: 'json'
+			, data: {id: id, price: price}
+			, type: 'post'
+			, success: function(res) {
+				console.log(res);
+				$('#im-'+id).remove();
+			}
+			, error: function(r) {
+				console.log(r.responseText);
+			}
+		});
+	}
+	, initialize: function() {
+		$('.add-item-to-store').live('click', function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			
+			var tr = $(this).closest('tr')
+				, price = $('#'+tr.attr('id') + ' .price input').val();
+			
+			sandbox.request_module('store').add_to_store(tr.attr('id').split('im-')[1],price);
+		});
+	}
+}, sandbox.module));
+
 sandbox.register_module('item',util.extend({
 	title: 'Item Info'
 	, description: 'Loads item info into simple modal'
@@ -67,14 +98,17 @@ sandbox.register_module('item',util.extend({
 			e.preventDefault();
 			e.stopPropagation();
 			
+			var _this = this;
+			
 			$.ajax({
 				url: $(this).attr('href').split('/inventory')[0]+'/inventory'
 				, dataType: 'json'
 				, type: 'post'
-				, data: {item_id: $(this).attr('href').split('/inventory')[1]}
+				, data: {item_id: $(this).attr('href').split('/inventory/')[1]}
 				, success: function(res){ 
 					if(gold) {
 						$('#gold').html(res.gold);
+						$(_this).closest('tr').remove();
 					}
 				}
 			})
@@ -118,11 +152,18 @@ sandbox.register_module('fight-club', util.extend({
 			e.preventDefault();
 			e.stopPropagation();
 			
+			$('#fight-button').attr('disabled',true);
+			
 			$.ajax({
 				url: $(this).attr('action')
 				, dataType: 'json'
 				, type: 'post'
 				, data: {monster_id: $('#monster option:selected').val()}	
+				, complete: function() {
+					setTimeout(function(){
+						$('#fight-button').attr('disabled',false);
+					}, 2000);
+				}
 				, success: function(res) {
 					sandbox.request_module('fight-club').render(res);
 				}
@@ -186,7 +227,7 @@ sandbox.register_module('inventory', util.extend({
 			this.load(item);
 		}, this);
 		
-		nobi.bind('inventory-tab', function(){
+		nobi.bind('stats-tab', function(){
 			$.ajax({
 				url: 'index.php/?/inventory'
 				, dataType: 'json'
@@ -197,8 +238,170 @@ sandbox.register_module('inventory', util.extend({
 					}
 				}
 			});
-		})
+		});
 		
+	}
+}, sandbox.module));
+
+sandbox.register_module('building', util.extend({
+	title: 'Building Manager'
+	, description: 'Handles generic building queries (like upgrades)'
+	, initialize: function() {
+		$('#building-upgrade').click(function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			
+			$.ajax({
+				url: $(this).attr('href')
+				, dataType: 'json'
+				, type: 'post'
+				, success: function(res) {
+					if(res !== undefined && res) {
+						
+					}
+					else {
+						$('#building-upgrade').after('<p>Sorry, you don\'t have enough resources for this upgrade.</p>');
+					}
+				}
+				, error: function(r) {
+					console.log(r.responseText);
+				}
+			});
+		});
+	}
+}, sandbox.module));
+
+sandbox.register_module('chat', util.extend({
+	title: 'Chat'
+	, description: 'Chat manager'
+	, interval: undefined
+	, since: undefined
+	, say: function(message) {
+		var chat = sandbox.request_module('chat');
+		if(chat.interval !== undefined) {
+			clearInterval(chat.interval);
+		}
+
+		$.ajax({
+			url: 'index.php/?/chat'
+			, dataType: 'json'
+			, type: 'post'
+			, data: {message: message}
+			, complete: function(){
+				$('#chat-button').attr('disabled',false);
+				sandbox.request_module('chat').since = res;
+				sandbox.request_module('chat').interval = setInterval(sandbox.request_module('chat').receive, 10000);
+			}
+			, success: function(res) {
+				if(res !== undefined) {
+					
+					$('#message').val('');
+					sandbox.request_module('chat').receive();
+				}
+			}
+		});
+	}
+	, receive: function() {
+		$.ajax({
+			url: 'index.php/?/chat/'+sandbox.request_module('chat').since
+			, dataType: 'json'
+			, type: 'get'
+			, success: function(res) {
+				sandbox.request_module('chat').since = res.time;
+				
+				var tmp = '', message;
+				for(var i = 0, l = res.messages.length; i < l; ++i) {
+					message = '<div';
+					if(res.messages[i].classification == 1) {
+						message += ((res.messages[i].classification == 1)?' class="message admin">':'')
+					}
+					else if(res.messages[i].classification == 2) {
+						message += ((res.messages[i].classification == 1)?' class="message server">':'')
+					}
+					else {
+						message += ' class="message">';
+					}
+					message += '<span class="from">'+res.messages[i].from+':</span> '+res.messages[i].text+'</div>';
+					tmp += message;
+				}
+				$('#chat-messages').prepend(tmp);
+				
+				
+			}
+			, error: function(r) {
+				console.log(r.responseText);
+			}
+		});
+	}
+	, initialize: function() {
+		$('#chat-form').submit(function(e){
+			sandbox.request_module('chat').say($('#message').val());
+			$('#chat-button').attr('disabled',true);
+			return false;
+		});
+		
+		if(this.interval === undefined) {
+			this.interval = setInterval(sandbox.request_module('chat').receive, 10000);
+			sandbox.request_module('chat').receive();
+		}
+	}
+}, sandbox.module));
+
+sandbox.register_module('mine', util.extend({
+	title: 'Mining System'
+	, description: 'Handles repetitive mining'
+	, interval: undefined
+	, current_run: 0
+	, total_runs: 0
+	, mine: function() {
+		$.ajax({
+			url: 'index.php/?/mine'
+			, dataType: 'json'
+			, type: 'post'
+			, data: {type: $('#resource-type').val()}
+			, complete: function() {
+				var mi = sandbox.request_module('mine');
+				++mi.current_run;
+				if(mi.current_run >= mi.total_runs) {
+					clearTimeout(mi.interval);
+					$('#mine-button').attr('disabled',false);
+				}
+				else {
+					mi.interval = setTimeout(mi.mine,2000);
+				}
+			}
+			, success: function(res) {
+				if(res !== undefined) {
+					console.log(res);
+					$('#resource-results').append('<li>You found '+res[0]+' stone</li>');
+					$('#stone').html(parseInt($('#stone').html()) + res[0]);
+					
+					if(res[1] === true) {
+						$('#resource-results').append('<li>You gained a level in mining!</li>');
+					}
+				}
+			}
+			, error: function(r){
+				console.log(r.responseText);
+			}
+		});
+	}
+	,initialize: function() {
+		
+		$('#mine').submit(function(e){
+			var mine = sandbox.request_module('mine');
+			
+			$('#mine-button').attr('disabled',true);
+			
+			if(mine.interval !== undefined) {
+				clearTimeout(mine.interval);
+				mine.total_runs = $('#length').val();
+			}
+			
+			mine.interval = setTimeout(mine.mine, 2000);
+			
+			return false;
+		});
 	}
 }, sandbox.module));
 

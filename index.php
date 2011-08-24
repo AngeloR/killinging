@@ -1,16 +1,23 @@
 <?php 
 
+date_default_timezone_set('America/Toronto');
+
 include('lib/app.php');
 include('lib/limonade.php');
 include('lib/rb.php');
 
 
+include('interface/building.php');
+include('interface/store.php');
+include('interface/quarry.php');
+
+
 include('model/player.php');
 include('model/city.php');
 include('model/building.php');
-include('model/store.php');
 include('model/item.php');
 include('model/owned.php');
+include('model/message.php');
 
 function configure() {
 	appinit();
@@ -65,11 +72,19 @@ dispatch_get('/game','game');
 dispatch_get('/move/:dir','movement_handler');
 dispatch_post('/fight','fight_handler');
 dispatch_get('/item/info/:id','get_item_info');
+
 dispatch_get('/inventory/info/:id','get_inventory_info');
 dispatch_get('/building/info/:id','get_building_info');
 dispatch_post('/inventory/:id','buy_item');
-
 dispatch_get('/inventory','get_inventory');
+
+dispatch_post('/store/add','add_item_to_store');
+
+dispatch_post('/mine','mine');
+dispatch_post('/upgrade/:building_id','upgrade_building');
+
+dispatch_get('/chat/:since','get_chat_messages');
+dispatch_post('/chat','post_chat_message');
 
 function homepage() {
 	$classes = R::find('class','1 order by name asc');
@@ -122,6 +137,16 @@ function signup() {
 }
 
 
+function chat_message($message) {
+	$message = R::dispense('message');
+	$message->from = 'Server';
+	$message->text = $message;
+	$message->post_time = time();
+	$message->classification = 2;
+	
+	R::store($message);
+}
+
 
 
 function game() {
@@ -135,58 +160,80 @@ function game() {
 	
 	$buildings = R::find('building_type','1 order by cost asc');
 	set('buildings',$buildings);
-
-	return render('map.html.php');
+	
+	return render('game.html.php');
 }
 
 
 function movement_handler($dir) { 
 	$player = unserialize($_SESSION['player']);
+	$city = R::findOne('city','id = ?',array($player->city));
 	switch($dir) {
 		case 'ne':
-			$player->loc_x += 1;
-			$player->loc_y -= 1;
+			if($city->can_move_to($player->loc_x + 1, $player->loc_y - 1)) {
+				$player->loc_x += 1;
+				$player->loc_y -= 1;
+			}
 			break;
 			
 		case 'n':
-			$player->loc_y -= 1;
+			if($city->can_move_to($player->loc_x, $player->loc_y - 1)) {
+				$player->loc_y -= 1;
+			}
 			break;
 			
 		case 'nw':
-			$player->loc_x -= 1;
-			$player->loc_y -= 1;
+			if($city->can_move_to($player->loc_x - 1, $player->loc_y - 1)) {
+				$player->loc_x -= 1;
+				$player->loc_y -= 1;
+			}
 			break;
 			
 		case 'w':
-			$player->loc_x -= 1;
+			if($city->can_move_to($player->loc_x - 1, $player->loc_y)) {
+				$player->loc_x -= 1;
+			}
 			break;
 		
 		case 'e':
-			$player->loc_x += 1;
+			if($city->can_move_to($player->loc_x + 1, $player->loc_y)) {
+				$player->loc_x += 1;
+			}
 			break;
 			
 		case 'sw':
-			$player->loc_x -= 1;
-			$player->loc_y += 1;
+			if($city->can_move_to($player->loc_x - 1, $player->loc_y + 1)) {
+				$player->loc_x -= 1;
+				$player->loc_y += 1;
+			}
 			break;
 			
 		case 's':
-			$player->loc_y += 1;
+			if($city->can_move_to($player->loc_x, $player->loc_y + 1)) {
+				$player->loc_y += 1;
+			}
 			break;
 			
 		case 'se':
-			$player->loc_x += 1;
-			$player->loc_y += 1;
+			if($city->can_move_to($player->loc_x + 1, $player->loc_y + 1)) {
+				$player->loc_x += 1;
+				$player->loc_y += 1;
+			}
 			break;
 	}
 	
 	if($player->getMeta('tainted')) {
 		// Check to see if the player should find a random item or not.
-		// This will be based on luck and the "wood/stone" skill. You 
+		// This will be based on luck and the "mining/woodworking" skill. You 
 		// can only find wood OR stone on each step.
 		// The amount of wood or stone you find is dependent on your skill in that 
 		// particular stat.
-		
+		$rand = rand(0,10000);
+		$stoneBound = $player->luck + rand($player->mining,$player->mining+100) + rand(0,100); 
+		if($rand <= $stoneBound) {
+			$player->stone++;
+		}
+
 		R::store($player);
 		$_SESSION['player'] = serialize($player);
 	}
@@ -200,6 +247,8 @@ function fight_club_calc_damage($attacker,$defender) {
 	$defence = $defender->str;
 	
 	$damage = floor($damage - $defence);
+	
+	$damage += round(rand(0,$damage*.1));
 	
 	if($damage < 0) {
 		$damage = 0;
@@ -312,14 +361,15 @@ function get_building_info($id) {
 
 function buy_item() {
 	$item = R::findOne('item','id = ?',array($_POST['item_id']));
-	$store = R::findOne('store','id = ?',array($item->store_id));
+	$store = R::findOne('building','id = ? and building_type = 1',array($item->store_id));
 	$player = unserialize($_SESSION['player']);
 	
-	// check if store is owners store
-	
-	if(($player->gold - $item->cost) >= 0 ) {
-		// can buy item
+	// check if store is owners store, if its not, subtract the cost!
+	if($store->owner != $player->id ) {
 		$player->gold -= $item->cost;
+	}
+	// can buy item
+	if($player->gold >= 0 || $store->owned_id == $player->id ) {
 		$owned_item = R::dispense('owned_item');
 		// copy from bean
 		$owned_item->import($item->export(),'name,cost,level,str,def,agi,luck');
@@ -335,6 +385,7 @@ function buy_item() {
 		));
 	}
 	else {
+		$player->gold += $item->cost;
 		return json(array((bool)false));
 	}
 }
@@ -355,6 +406,168 @@ function get_inventory_info($id) {
 	$item = R::findOne('owned_item','id = ?',array($id));
 	
 	return json($item->tojson());
+}
+
+function add_item_to_store() {
+	$player = unserialize($_SESSION['player']);
+	if(array_key_exists('id',$_POST) && array_key_exists('price',$_POST)) {
+		$owned_item = R::findOne('owned_item','id = ? and owner = ?',array($_POST['id'],$player->id));
+		
+		if(!empty($owned_item)) {
+			$item = R::dispense('item');
+			$item->import($owned_item->export(), 'name,level,str,def,agi,luck');
+			$building = R::findOne('building','owner = ? and loc_x = ? and loc_y = ? and building_type = 1',array($player->id,$player->loc_x,$player->loc_y));
+			if(!empty($building)) {
+				$item->store_id = $building->id;
+				$item->cost = intval($_POST['price']);
+				R::store($item);
+				R::trash($owned_item);
+				
+				return json($item->tojson());
+			}
+			return json('wrong-location');
+		}
+		return json('non-existent');
+	}
+	
+	return json('malformed');
+}
+
+function mine() {
+	$player = unserialize($_SESSION['player']);
+	$mine = R::findOne('building', 'loc_x = ? and loc_y = ? and building_type = 3', array($player->loc_x,$player->loc_y));
+	
+	if(array_key_exists('type',$_POST) && !empty($mine)) {
+		$type = intval($_POST['type']);
+		switch($type) {
+			case 1: 
+				// stone
+				$rand = rand(0,10000);
+				$stone = ceil(1 + round(($player->mining * 0.85))) * $mine->level;
+				$crit = rand($player->luck,$player->luck+100) + rand(0,10000); 
+				
+				if($rand <= $crit) {
+					$stone += $stone;
+					$player->mining_exp += 3;
+				}
+					
+				$player->stone = $player->stone + $stone;
+				$old_level = $player->mining;
+				$player->mining_exp += 1;
+					
+				R::store($player);
+				$_SESSION['player'] = serialize($player);
+					
+				if($old_level == $player->mining) {
+					return json(array((int)$stone,(bool)false));
+				}
+				else {
+					return json(array((int)$stone,(bool)true));
+				}
+				
+				break;
+				
+			case 2:
+				//copper
+				$rand = rand(0,15000);
+				$copper = ceil(1 + round(($player->mining * 0.85))) * $mine->level;
+				$crit = rand($player->luck,$player->luck+100) + rand(0,10000); 
+				
+				if($rand <= $crit) {
+					$copper += $copper;
+					$player->mining_exp += 3;
+				}
+					
+				$player->coppyer = $player->copper + $copper;
+				$old_level = $player->mining;
+				$player->mining_exp += 1;
+					
+				R::store($player);
+				$_SESSION['player'] = serialize($player);
+					
+				if($old_level == $player->mining) {
+					return json(array((int)$copper,(bool)false));
+				}
+				else {
+					return json(array((int)$copper,(bool)true));
+				}
+				break;
+				
+			case 3:
+				//tin
+				break;
+				
+			case 4: 
+				//iron
+				break;
+				
+			case 5: 
+				//silver
+				break;
+				
+			case 6:
+				//gold
+				break;
+		}
+	}
+}
+
+function upgrade_building($building_id) {
+	$building_id = intval($building_id);
+	$player = unserialize($_SESSION['player']);
+	
+	$building = R::findOne('building','id = ? and owner = ?',array($building_id,$player->id));
+	
+	if(!empty($building)) {
+		if($player->gold - $building->cost >= 0 && $player->stone - $building->stone >= 0) {
+			$player->gold -= $building->cost;
+			$player->stone -= $building->stone;
+			
+			R::stonre($player);
+			$_SESSION['player'] = serialize($player);
+			
+			return json((bool)true);
+		}
+		else {
+			return json((bool)false);
+		}
+	}
+	
+	return json((bool)false);
+}
+
+function get_chat_messages($since = 0) {
+	$since = intval($since);
+	$time = time();
+
+	if($since < strtotime('-1 hour',$time)) {
+		$since = strtotime('-1 hour',$time);
+	}
+	
+	$messages = R::find('message','post_time >= ? order by post_time desc limit 30',array($since)); 
+	
+	$tmp = array();
+	foreach($messages as $i => $message) {
+		$tmp[] = $message->tojson();
+	}
+	
+	return json(array('time' => (int)$time, 'messages' => $tmp));
+}
+
+function post_chat_message() {
+	$time = time();
+	$player = unserialize($_SESSION['player']);
+	if(array_key_exists('message',$_POST) && !empty($_POST['message'])) {
+		$message = R::dispense('message');
+		$message->from = $player->username;
+		$message->text = trim($_POST['message']);
+		$message->post_time = $time;
+		$message->classification = $player->admin;
+		
+		R::store($message);
+		
+		return json((int)$time);
+	}
 }
 
 run();

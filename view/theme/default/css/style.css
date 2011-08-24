@@ -71,9 +71,9 @@ h1 {
 	border-width: 0 1px;
 }
 #content {
-	max-height: 450px;
+	max-height: 500px;
 	overflow: auto;
-	height: 450px;
+	height: 500px;
 }
 #footer {
 	font-size: 0.75em;
@@ -85,32 +85,77 @@ h1 {
 	font-size: 0.75em;
 }
 
+/** CHAT **/
+#message {
+	width: 185px;	
+}
+#chat-messages {
+	height: 380px;
+	overflow: auto;
+}
+.message {
+	font-size: 0.733em;
+}
+.message > .from {
+	font-weight: bold;
+}
+.message.admin {
+	color: #0000aa;
+}
+
 /** MAP **/
 #location {
 	font-size: 0.833em;
 	display: inline;
 }
+#map-wrapper {
+	position: relative;
+}
+#map-underlay {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	z-index: 2;
+	line-height: 0px;
+}
+#map-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 3;
+}
 #map {
 	text-align: center;
 	margin: 0 auto;
 }
-#map td {
-	border: solid 1px #000;
-}
-#map td {
+#map-overlay td {
 	width: 60px;
 	height: 60px;
 	text-align: center;
 	vertical-align: middle;
+	border: 0px;
+}
+#map-side {
+	width: 420px;
 }
 #map-arrow-thing {
-	width: 100%;
-	height: 100%;
-	position: relative;
+	width: 60px;
+	height: 60px;
+	position: absolute;
+	left: 10px;
 }
 #map-title {
 	font-size: 1.2em;
 	font-weight: bold;
+}
+#map-holder {
+	width: 100%;
+	margin-top: 10px;
+}
+
+/** FIGHTS **/
+#fight-side {
+	padding: 10px;
 }
 
 /** MENU **/
@@ -164,10 +209,32 @@ a.modalCloseImg {
 	cursor: pointer;
 }
 
+.wrap {
+	position: relative;
+	width: 60px;
+	height: 60px;
+}
+#player {
+	position: absolute;
+	z-index: 4;
+}
+.building {
+	position: absolute;
+	z-index: 3;
+}
+.building,#player {
+	top: 15px;
+	left: 15px;
+}
+
 /** DIRECTIONS **/
-#s,#n,#se,#sw,#ne,#nw,#e,#w,#player {
+#s,#n,#se,#sw,#ne,#nw,#e,#w {
 	position: absolute;
 	z-index: 2;
+}
+#movement-wrapper {
+	position: relative;
+	height: 80px;
 }
 #nw {
 	left: 0;
@@ -185,10 +252,6 @@ a.modalCloseImg {
 	top: 20px;
 	left: 0;
 }
-#player {
-	top: 20px;
-	right: 23px;
-}
 #e {
 	top: 20px;
 	right: 0;
@@ -205,3 +268,4 @@ a.modalCloseImg {
 	bottom: 0;
 	right: 0;
 }
+

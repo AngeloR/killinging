@@ -17,7 +17,8 @@ class Model_Building_Type extends RedBean_SimpleModel {
 		$tmp = array(
 			'id' => (int)$this->id,
 			'name' => $this->name,
-			'cost' => (int)$this->cost,
+			'cost' => number_format($this->cost),
+			'stone' => (int)number_format($this->stone),
 			'time' => (int)$this->time,
 			'description' => $this->description
 		);

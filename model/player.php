@@ -9,6 +9,11 @@ class Model_Player extends RedBean_SimpleModel {
 			$this->level += 1;
 		}
 		
+		if($this->mining_exp > $this->exp_to_mining()) {
+			$this->mining_exp -= $this->exp_to_mining();
+			$this->mining += 1;
+		}
+		
 		if($this->current_hp < 0) {
 			$this->current_hp = 0;
 		}
@@ -41,6 +46,9 @@ class Model_Player extends RedBean_SimpleModel {
 		$this->def = $class->def;
 		$this->agi = $class->agi;
 		$this->luck = $class->luck;
+		
+		$this->mining = $class->mining;
+		$this->smithing = $class->smithing;
 			
 		$this->city = 1;
 		$this->loc_x = 50;
@@ -49,5 +57,9 @@ class Model_Player extends RedBean_SimpleModel {
 	
 	public function exp_to_level() {
 		return floor(log($this->level + 1) * $this->level * 100);
+	}
+	
+	public function exp_to_mining() {
+		return floor(log($this->mining + 1) * $this->mining * 65);
 	}
 }

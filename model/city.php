@@ -1,9 +1,18 @@
 <?php
 class Model_City extends RedBean_SimpleModel {
+	
+	private $land = array(
+			'0,153,0' => array('name'=>'grass','walk'=>1),
+			'20,68,20' => array('name'=>'trees','walk'=>1),
+			'0,32,151' => array('name'=>'water','walk'=>0),
+			'104,104,104' => array('name'=>'stone','walk'=>1),
+		);
+	
 	public function open() {
 		$player = unserialize($_SESSION['player']);
 		$map_size = 4;
 		$this->buildings = R::find('building','map_id = ? and (loc_x > ? and loc_x < ?) and (loc_y > ? and loc_y < ?)',array($this->id,$player->loc_x - $map_size, $player->loc_x + $map_size, $player->loc_y - $map_size, $player->loc_y + $map_size));
+		
 	}
 	
 	public function update() {
@@ -11,9 +20,49 @@ class Model_City extends RedBean_SimpleModel {
 			unset($this->buildings);
 		}
 	}
+	
+	public function draw($center_x,$center_y,$size) {
+		$map = imagecreatefrompng('maps/'.$this->id.'.png');
+
+		
+		$land_types = array_keys($this->land);
+		
+		
+		for($y = ($size*-1); $y <= $size; ++$y) {
+			for($x = ($size*-1); $x <= $size; ++$x) {
+				$rgb = imagecolorat($map,$center_x + $x,$center_y + $y);
+				$tile = imagecolorsforindex($map, $rgb);
+				
+				$r = ($rgb >> 16) & 0xFF;
+				$g = ($rgb >> 8) & 0xFF;
+				$b = $rgb & 0xFF;
+				
+				$key =	$r.','.$g.','.$b;
+				if(array_key_exists($key,$this->land)) {
+					echo '<img src="tiles/'.$this->land[$key]['name'].'.png" width="60" height="60">';
+				}
+			}
+			echo '<br>';
+		}
+	}
+	
+	public function can_move_to($x,$y) {
+		$map = imagecreatefrompng('maps/'.$this->id.'.png');
+		$rgb = imagecolorat($map,$x,$y);
+		$tile = imagecolorsforindex($map, $rgb);
+				
+		$r = ($rgb >> 16) & 0xFF;
+		$g = ($rgb >> 8) & 0xFF;
+		$b = $rgb & 0xFF;
+		
+		$key =	$r.','.$g.','.$b;
+			
+		return (array_key_exists($key,$this->land) && $this->land[$key]['walk']);
+	}
 
 	public function at($x,$y) {
 		$size = count($this->buildings);
+		$player = unserialize($_SESSION['player']);
 
 		foreach($this->buildings as $building) {
 			
@@ -21,9 +70,25 @@ class Model_City extends RedBean_SimpleModel {
 				switch($building->building_type) {
 					case 1:
 						$point = new StoreInterface($building);
+						$point->owner = $player->id;
 						return $point;
 						break;
+						
+					case 3:
+						$quarry = new QuarryInterface($building);
+						$quarry->owner = $player->id;
+						return $quarry;
+						break;
 				}
+			}
+		}
+		return false;
+	}
+	
+	public function building_at($x,$y) {
+		foreach($this->buildings as $building) {
+			if($building->loc_x == $x && $building->loc_y == $y) {
+				return $building;
 			}
 		}
 		return false;
@@ -55,5 +120,15 @@ class Model_City extends RedBean_SimpleModel {
 		}
 		
 		return true;
+	}
+	
+	public function player_owns_location($x,$y) {
+		$player = unserialize($_SESSION['player']);
+		foreach($this->buildings as $building) {
+			if($building->owner == $player->id && $building->loc_x == $x && $building->loc_y == $y) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
