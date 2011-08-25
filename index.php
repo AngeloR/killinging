@@ -77,6 +77,7 @@ dispatch_get('/inventory/info/:id','get_inventory_info');
 dispatch_get('/building/info/:id','get_building_info');
 dispatch_post('/inventory/:id','buy_item');
 dispatch_get('/inventory','get_inventory');
+dispatch_post('/skill/:type','skillup');
 
 dispatch_post('/store/add','add_item_to_store');
 
@@ -86,8 +87,10 @@ dispatch_post('/upgrade/:building_id','upgrade_building');
 dispatch_get('/chat/:since','get_chat_messages');
 dispatch_post('/chat','post_chat_message');
 
+include('admin.php');
+
 function homepage() {
-	$classes = R::find('class','1 order by name asc');
+	$classes = R::find('class','preform = 0 order by name asc');
 	set('classes',$classes);
 	return render('homepage.html.php');
 }
@@ -242,19 +245,25 @@ function movement_handler($dir) {
 }
 
 function fight_club_calc_damage($attacker,$defender) {
-	$damage = $attacker->str * $attacker->agi;
+	$damage = round($attacker->str * $attacker->agi * ($attacker->agi/2));
 	
-	$defence = $defender->str;
+	$defence = $defender->tough*+$defender->vit*($defender->tough/2);
+	
+	// crits!
+	$crit_rate = rand(0,$attacker->luck);
+	$crit = false;
+	if($crit_rate <= ($attacker->luck*0.1)) {
+		$damage *= 0.75;
+		$crit = true;
+	}
 	
 	$damage = floor($damage - $defence);
 	
-	$damage += round(rand(0,$damage*.1));
-	
-	if($damage < 0) {
-		$damage = 0;
+	if($damage <= 0) {
+		$damage = ($crit)?1:0;
 	}
 	
-	return $damage;
+	return array($damage,$crit);
 }
 
 function fight_club($p1,$p2) {
@@ -272,13 +281,13 @@ function fight_club($p1,$p2) {
 	while($first->current_hp > 0 && $second->current_hp > 0) {
 		++$rounds;
 		$damage = fight_club_calc_damage($first,$second);
-		$second->current_hp -= $damage;
+		$second->current_hp -= $damage[0];
 		
-		if(isset($first->name)) {
-			$messages[] = $first->name.' attacked '.$second->username.' for '.$damage.' damage.';
+		if(isset($first->name) && !empty($first->name)) {
+			$messages[] = $first->name. (($damage[1])?' critically':'') .' attacked '.$second->username.' for '.$damage[0].' damage.';
 		}
 		else {
-			$messages[] = $first->username.' attacked '.$second->name.' for '.$damage.' damage.';
+			$messages[] = $first->username. (($damage[1])?'critically':'') .' attacked '.$second->name.' for '.$damage[0].' damage.';
 		}
 		
 		if($second->current_hp <= 0) {
@@ -286,13 +295,13 @@ function fight_club($p1,$p2) {
 		}
 		
 		$damage = fight_club_calc_damage($second,$first);
-		$first->current_hp -= $damage;
+		$first->current_hp -= $damage[0];
 		
 		if(isset($second->name)) {
-			$messages[] = $second->name.' attacked '.$first->username.' for '.$damage.' damage.';
+			$messages[] = $second->name. (($damage[1])?'critically':'') .' attacked '.$first->username.' for '.$damage[0].' damage.';
 		}
 		else {
-			$messages[] = $second->username.' attacked '.$first->name.' for '.$damage.' damage.';
+			$messages[] = $second->username. (($damage[1])?'critically':'') .' attacked '.$first->name.' for '.$damage[0].' damage.';
 		}
 	}
 	
@@ -344,7 +353,7 @@ function fight_handler() {
 	 	 		'current_exp' => (int)$player->current_exp,
 	 	 		'total_exp' => (int)$player->exp_to_level(),
 	 	 		'gold' => (int)$player->gold,
-	 	 		'level' => (int)$player->level,
+	 	 		'level' => (int)$player->level
 	 	 )
 	 ));
 }
@@ -478,7 +487,7 @@ function mine() {
 					$player->mining_exp += 3;
 				}
 					
-				$player->coppyer = $player->copper + $copper;
+				$player->copper = $player->copper + $copper;
 				$old_level = $player->mining;
 				$player->mining_exp += 1;
 					
@@ -567,6 +576,27 @@ function post_chat_message() {
 		R::store($message);
 		
 		return json((int)$time);
+	}
+}
+
+function skillup($type) {
+	$types = array('vit','str','agi','luck','tough');
+	$player = unserialize($_SESSION['player']);
+	if(in_array($type,$types)) {
+		if($player->skill_points - 1 >= 0) {
+			$player->skillup($type);
+			
+			R::store($player);
+			$_SESSION['player'] = serialize($player);
+			
+			return json(array(
+				$type => (int)$player->$type,
+				'type' => $type,
+				'total_hp' => (int)$player->total_hp,
+				'damage' => (int)$player->damage(),
+				'defence' => (int)$player->defence()
+			));
+		}
 	}
 }
 

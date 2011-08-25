@@ -7,6 +7,10 @@ class Model_Player extends RedBean_SimpleModel {
 			
 			$this->current_exp -= $this->exp_to_level();
 			$this->level += 1;
+			$this->skill_points += 2;
+
+			$this->total_hp = $this->total_hp();
+			$this->current_hp = $this->total_hp;
 		}
 		
 		if($this->mining_exp > $this->exp_to_mining()) {
@@ -27,25 +31,47 @@ class Model_Player extends RedBean_SimpleModel {
 		}
 	}
 	
+	public function damage() {
+		return round($this->str * $this->agi + ($this->agi/2));
+	}
+	
+	public function defence() {
+		return $this->tough*+$this->vit*($this->tough/2);
+	}
+	
+	public function total_hp() {
+		return round($this->vit*$this->tough + $this->vit*($this->tough/2));
+	}
+	
+	public function skillup($skill) {
+		$this->skill_points--;
+		$this->$skill += 1;
+		
+		$this->total_hp = $this->total_hp();
+	}
+	
 	public function new_setup() {
 		$this->password = pw_hash($this->password);
 			
 		$class = R::findOne('class','id = ?',array($this->class_id));
-			
-			
-		$this->total_hp = $class->hp;
-		$this->current_hp = $class->hp;
+		
+		$this->skill_points = 1;
 			
 		$this->total_mp = $class->mp;
 		$this->current_mp = $class->mp;
 		
 		$this->current_exp = 0;
-		$this->gold = 1000;
+		$this->gold = 100;
 		
+		$this->vit = $class->vit;
 		$this->str = $class->str;
-		$this->def = $class->def;
+		$this->tough = $class->tough;
 		$this->agi = $class->agi;
 		$this->luck = $class->luck;
+		
+		
+		$this->total_hp = $this->total_hp();
+		$this->current_hp = $this->total_hp;
 		
 		$this->mining = $class->mining;
 		$this->smithing = $class->smithing;

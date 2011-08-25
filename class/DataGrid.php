@@ -261,6 +261,7 @@ class OPCDataGrid {
         $this->buildDisplayFields();
         $tmp = '<table class="datagrid" cellspacing="0">';
         $tmp .= $this->createTableHeaders();
+				$tmp .= '<tbody>';
         foreach($this->displaySource as $i => $row) {
             $class = 'odd';
             if($i%2 != 0) {
@@ -268,7 +269,7 @@ class OPCDataGrid {
             }
             $tmp .= $this->addRowToTable($row,$class,$i);
         }
-        $tmp .= '</table>';
+        $tmp .= '</tbody></table>';
         return $tmp;
     }
 
@@ -278,11 +279,11 @@ class OPCDataGrid {
      * @return string   header row for table
      */
     private function createTableHeaders() {
-        $tmp = '<tr>';
+        $tmp = '<tr><thead>';
         foreach($this->displayFields as $safe=>$actual) {
             $tmp .= '<th>'.$actual.'</th>';
         }
-        $tmp .= '</tr>';
+        $tmp .= '</thead></tr>';
         return $tmp;
     }
 

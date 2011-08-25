@@ -1,6 +1,6 @@
 --
 -- MySQL 5.5.8
--- Wed, 24 Aug 2011 22:37:26 +0000
+-- Thu, 25 Aug 2011 21:57:37 +0000
 --
 
 CREATE TABLE `building` (
@@ -51,23 +51,24 @@ INSERT INTO `city` (`id`, `name`) VALUES
 CREATE TABLE `class` (
    `id` int(11) not null auto_increment,
    `name` varchar(50),
-   `hp` int(11),
    `mp` int(11),
+   `vit` int(11),
    `str` int(11),
-   `def` int(11),
+   `tough` int(11),
    `agi` int(11),
    `luck` int(11),
    `mining` int(11),
    `smithing` int(11),
    `description` text,
+   `preform` int(11) default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=5;
 
-INSERT INTO `class` (`id`, `name`, `hp`, `mp`, `str`, `def`, `agi`, `luck`, `mining`, `smithing`, `description`) VALUES 
-('1', 'Wiccan', '', '', '', '', '', '', '', '', ''),
-('2', 'Hobo', '16', '3', '4', '6', '6', '15', '1', '1', 'When the zombie apocalypse finally arrived, the Hobo\'s finally found their place.\n\nThey stopped their eternal wars and decided to start attacking the zombies. Years of living on the streets of Towneville had hardened them. Years of begging meant that they knew where the humans would be. They were the first choice of the CPP. \n\nA force that doesn\'t know hunger or sleep. That knows exactly where the humans are. '),
-('3', 'Seal Clubber', '', '', '', '', '', '', '', '', ''),
-('4', 'Nerd', '', '', '', '', '', '', '', '', '');
+INSERT INTO `class` (`id`, `name`, `mp`, `vit`, `str`, `tough`, `agi`, `luck`, `mining`, `smithing`, `description`, `preform`) VALUES 
+('1', 'Wiccan', '', '', '', '', '', '', '', '', '', '0'),
+('2', 'Warrior', '3', '4', '5', '6', '6', '15', '1', '1', 'When the zombie apocalypse finally arrived, the Hobo\'s finally found their place.\n\nThey stopped their eternal wars and decided to start attacking the zombies. Years of living on the streets of Towneville had hardened them. Years of begging meant that they knew where the humans would be. They were the first choice of the CPP. \n\nA force that doesn\'t know hunger or sleep. That knows exactly where the humans are. ', '0'),
+('3', 'Seal Clubber', '', '', '', '', '', '', '', '', '', '0'),
+('4', 'Nerd', '', '', '', '', '', '', '', '', '', '0');
 
 CREATE TABLE `item` (
    `id` int(11) not null auto_increment,
@@ -94,30 +95,48 @@ CREATE TABLE `message` (
    `post_time` int(11) unsigned,
    `classification` tinyint(3) unsigned,
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=5;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6;
 
 INSERT INTO `message` (`id`, `from`, `text`, `post_time`, `classification`) VALUES 
 ('1', 'xangelo', 'heyo!', '1314225275', '1'),
 ('2', 'xangelo', 'test?', '1314225364', '1'),
 ('3', 'xangelo', 'test', '1314225368', '1'),
-('4', 'xangelo', 'testing again', '1314225413', '1');
+('4', 'xangelo', 'testing again', '1314225413', '1'),
+('5', 'xangelo', 'test?', '1314294475', '1');
 
 CREATE TABLE `monster` (
    `id` int(11) not null auto_increment,
    `name` varchar(100),
    `level` int(11) default '1',
    `current_hp` int(11),
+   `vit` int(11),
    `str` int(11) default '1',
-   `def` int(11) default '1',
+   `tough` int(11) default '1',
    `agi` int(11) default '1',
    `exp` int(11) default '5',
    `gold` int(11) default '0',
+   `_method` varchar(255),
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=3;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=4;
 
-INSERT INTO `monster` (`id`, `name`, `level`, `current_hp`, `str`, `def`, `agi`, `exp`, `gold`) VALUES 
-('1', 'Monster', '1', '25', '1', '1', '1', '2', '2'),
-('2', 'Rat', '1', '16', '2', '2', '4', '2', '1');
+INSERT INTO `monster` (`id`, `name`, `level`, `current_hp`, `vit`, `str`, `tough`, `agi`, `exp`, `gold`, `_method`) VALUES 
+('1', 'Missingno', '10', '180', '12', '10', '10', '10', '200', '5', ''),
+('2', 'Rat', '1', '16', '4', '2', '2', '4', '2', '1', ''),
+('3', 'Vagabong', '3', '45', '5', '8', '6', '4', '12', '10', 'put');
+
+CREATE TABLE `news` (
+   `id` int(11) unsigned not null auto_increment,
+   `title` text,
+   `post_date` int(11) unsigned,
+   `posted_by` varchar(255),
+   `posted_by_id` tinyint(3) unsigned,
+   `news` text,
+   `approved` int(11) default '0',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=5;
+
+INSERT INTO `news` (`id`, `title`, `post_date`, `posted_by`, `posted_by_id`, `news`, `approved`) VALUES 
+('4', 'Welcome', '1314304659', 'xangelo', '8', 'Welcome to the Rising Legends administration panel. From here you should be able to access most of the backend of the website. \n\nAt the moment the game is rather lacking in Monsters and Items. I would recommend that after you create a monster (assign it 0 gold and 0 exp) and then ask real players to test against it.\n\nAs for items, just keep in mind the price and the stat increases. \n\nAll your actions are logged, so if you do screw up... don\'t panic. Just email xangelo@gmail.com and let them know what happened.', '1');
 
 CREATE TABLE `owned_item` (
    `id` int(11) unsigned not null auto_increment,
@@ -147,9 +166,10 @@ CREATE TABLE `player` (
    `total_mp` tinyint(3) unsigned,
    `current_mp` tinyint(3) unsigned,
    `str` tinyint(3) unsigned,
-   `def` tinyint(3) unsigned,
+   `tough` tinyint(3) unsigned,
    `agi` tinyint(3) unsigned,
    `luck` tinyint(3) unsigned,
+   `vit` int(11),
    `mining` int(11),
    `smithing` int(11),
    `city` set('1'),
@@ -157,15 +177,16 @@ CREATE TABLE `player` (
    `loc_y` tinyint(3) unsigned,
    `level` int(11) default '1',
    `current_exp` int(11) default '0',
+   `skill_points` int(11) default '1',
    `gold` int(11) default '1000',
    `stone` int(11) default '5',
    `last_battled` tinyint(3) unsigned,
    `mining_exp` int(11) default '0',
-   `copper` set('1'),
-   `coppyer` tinyint(3) unsigned,
+   `copper` int(11) default '0',
    `admin` int(11) default '0',
+   `coppyer` tinyint(3) unsigned,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=9;
 
-INSERT INTO `player` (`id`, `username`, `password`, `email`, `class_id`, `total_hp`, `current_hp`, `total_mp`, `current_mp`, `str`, `def`, `agi`, `luck`, `mining`, `smithing`, `city`, `loc_x`, `loc_y`, `level`, `current_exp`, `gold`, `stone`, `last_battled`, `mining_exp`, `copper`, `coppyer`, `admin`) VALUES 
-('8', 'xangelo', '9d6f6dbca62962790cfca436a9c7c156436b2d46', 'xangelo@gmail.com', '2', '16', '16', '3', '3', '4', '6', '6', '15', '2', '1', '1', '47', '52', '4', '35', '1019', '164', '2', '45', '', '6', '1');
+INSERT INTO `player` (`id`, `username`, `password`, `email`, `class_id`, `total_hp`, `current_hp`, `total_mp`, `current_mp`, `str`, `tough`, `agi`, `luck`, `vit`, `mining`, `smithing`, `city`, `loc_x`, `loc_y`, `level`, `current_exp`, `skill_points`, `gold`, `stone`, `last_battled`, `mining_exp`, `copper`, `admin`, `coppyer`) VALUES 
+('8', 'xangelo', '9d6f6dbca62962790cfca436a9c7c156436b2d46', 'xangelo@gmail.com', '2', '180', '180', '3', '3', '17', '10', '11', '15', '12', '2', '1', '1', '44', '53', '12', '378', '4', '1543', '181', '1', '59', '0', '1', '3');

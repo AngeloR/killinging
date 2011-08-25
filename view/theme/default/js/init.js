@@ -139,6 +139,7 @@ sandbox.register_module('fight-club', util.extend({
 		$('#total_mp').html(res.stats.total_mp);
 		$('#current_exp').html(res.stats.current_exp);
 		$('#total_exp').html(res.stats.total_exp);
+		$('#exp_percent').html(Math.round(res.stats.current_exp/res.stats.total_exp * 100));
 		$('#gold').html(res.stats.gold);
 		
 		if($('#level').html() != res.stats.level) {
@@ -404,6 +405,43 @@ sandbox.register_module('mine', util.extend({
 		});
 	}
 }, sandbox.module));
+
+sandbox.register_module('stats', util.extend({
+	title: 'Skill up manager'
+	, description: 'Manages when users update their stats'
+	, initialize: function() {
+		$('.skillup').click(function(e){
+			e.preventDefault();
+			e.stopPropagation();
+			
+			if(parseInt($('#skill_points').html()) !== 0) {
+				$.ajax({
+					url: $(this).attr('href')
+					, dataType: 'json'
+					, type: 'post'
+					, complete: function() {
+						
+					}
+					, success: function(res) {
+						if(res) {
+							$('#'+res.type).html(res[res.type]);
+							$('#total_hp').html(res.total_hp);
+							$('#damage').html(res.damage);
+							$('#defence').html(res.defence);
+							$('#skill_points').html(parseInt($('#skill_points').html())-1);
+						}
+					}
+					, error: function(r) {
+						console.log(r.responseTexT);
+					}
+				});
+			}
+			else {
+				alert('You don\'t have enough Skill Points to do that.');
+			}
+		});
+	}
+},sandbox.module));
 
 sandbox.register_module('movement', util.extend({
 	title: 'Movement Manager'

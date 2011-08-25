@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Killinging - Make sure they're dead, because sometimes they're not</title>
+		<title>Rising Legends - Make sure they're dead, because sometimes they're not</title>
 		<link href='http://fonts.googleapis.com/css?family=Reenie+Beanie|Droid+Sans' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" type="text/css" href="<?php echo $THEMEDIR; ?>/css/style.css">
 	</head>
 	<body>
-		<h1>Killinging - Make sure they're dead, because sometimes they're not</h1>
+		<h1>Rising Legends - Make sure they're dead, because sometimes they're not</h1>
 		
 		<table class="thegame">
 			<tr>

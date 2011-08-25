@@ -35,6 +35,7 @@ footer, header, hgroup, menu, nav, section {
 }
 body {
 	line-height: 1;
+	font-size: 0.833em;
 }
 ol, ul {
 	list-style: none;
@@ -84,20 +85,28 @@ h1 {
 .help {
 	font-size: 0.75em;
 }
+table.stats td, table.stats th{
+	padding: 5px;
+}
+table.stats th {
+	text-align: right;
+	font-weight: bold;
+}
 
 /** CHAT **/
 #message {
-	width: 185px;	
+	width: 185px;
+}
+.message {
+	font-size: 0.9em;
 }
 #chat-messages {
 	height: 380px;
 	overflow: auto;
 }
-.message {
-	font-size: 0.733em;
-}
 .message > .from {
 	font-weight: bold;
+	cursor: pointer;
 }
 .message.admin {
 	color: #0000aa;
@@ -269,3 +278,9 @@ a.modalCloseImg {
 	right: 0;
 }
 
+
+
+/** FIXES **/
+.alignleft {
+	text-align: left !important;
+}

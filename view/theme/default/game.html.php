@@ -32,7 +32,7 @@
 						</tr>
 						<tr>
 							<th>Exp: </th>
-							<td><span id="current_exp"><?php echo $player->current_exp.'</span>/<span id="total_exp">'.$player->exp_to_level(); ?></span></td>
+							<td><span id="current_exp"><?php echo $player->current_exp.'</span>/<span class="id">'.$player->exp_to_level(); ?></span> (<span id="exp_percent"><?php echo round($player->current_exp/$player->exp_to_level() * 100); ?></span>%)</td>
 						</tr>
 					</table>
 					<hr>
@@ -54,7 +54,56 @@
 					
 					
 					<div id="stats">
-						<div id="inventory"></div>
+						<table class="stats-tab">
+							<tr>
+								<td rowspan="2">
+									<table class="stats">
+										<tr>
+											<th>Vitality:</th><td><span id="vit"><?php echo $player->vit; ?></span></td>
+											<td><a href="<?php echo url_for('skill','vit'); ?>" class="skillup">+1</a></td>
+											<th>Damage: </th><td><span id="damage"><?php echo $player->damage(); ?></span></td>
+										</tr>
+										<tr>
+											<th>Strength:</th><td><span id="str"><?php echo $player->str; ?></span></td>
+											<td><a href="<?php echo url_for('skill','str'); ?>" class="skillup">+1</a></td>
+											<th>Defence: </th><td><span id="defence"><?php echo $player->defence(); ?></span></td>
+										</tr>
+										<tr>
+											<th>Toughness:</th><td><span id="tough"><?php echo $player->tough; ?></span></td>
+											<td><a href="<?php echo url_for('skill','tough'); ?>" class="skillup">+1</a></td>
+										</tr>
+										<tr>
+											<th>Agility:</th><td><span id="agi"><?php echo $player->agi; ?></span></td>
+											<td><a href="<?php echo url_for('skill','agi'); ?>" class="skillup">+1</a></td>
+										</tr>
+										<tr>
+											<th>Luck:</th><td><span id="luck"><?php echo $player->luck; ?></span></td>
+											<td><a href="<?php echo url_for('skill','luck'); ?>" class="skillup">+1</a></td>
+										</tr>
+										<tr>
+											<th>Skill Points:</th><td></td><td><span id="skill_points"><?php echo $player->skill_points; ?></span></td>
+										</tr>
+									</table>
+									<hr>
+									<table class="stats">
+										<tr>
+											<th colspan="2" class="alignleft">Crafting</th>
+										</tr>
+										<tr>
+											<th>Mining: </th><td><span id="mining"><?php echo $player->mining; ?></span></td>
+										</tr>
+									</table>
+								</td>
+								<td>
+									<div id="inventory"></div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									
+								</td>
+							</tr>
+						</table>
 					</div>
 					
 					
