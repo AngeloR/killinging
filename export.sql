@@ -1,6 +1,6 @@
 --
 -- MySQL 5.5.8
--- Thu, 25 Aug 2011 21:57:37 +0000
+-- Fri, 26 Aug 2011 22:14:10 +0000
 --
 
 CREATE TABLE `building` (
@@ -65,10 +65,10 @@ CREATE TABLE `class` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=5;
 
 INSERT INTO `class` (`id`, `name`, `mp`, `vit`, `str`, `tough`, `agi`, `luck`, `mining`, `smithing`, `description`, `preform`) VALUES 
-('1', 'Wiccan', '', '', '', '', '', '', '', '', '', '0'),
-('2', 'Warrior', '3', '4', '5', '6', '6', '15', '1', '1', 'When the zombie apocalypse finally arrived, the Hobo\'s finally found their place.\n\nThey stopped their eternal wars and decided to start attacking the zombies. Years of living on the streets of Towneville had hardened them. Years of begging meant that they knew where the humans would be. They were the first choice of the CPP. \n\nA force that doesn\'t know hunger or sleep. That knows exactly where the humans are. ', '0'),
-('3', 'Seal Clubber', '', '', '', '', '', '', '', '', '', '0'),
-('4', 'Nerd', '', '', '', '', '', '', '', '', '', '0');
+('1', 'Slubberdoffer', '3', '3', '2', '3', '6', '6', '1', '1', 'With the age of Zombies, the Slubberdoffers finally came into the spotlight. Their quick hands and extremely plucky outlook on life made them a rare commodity. Not to mention, they were the only ones able to make their own clothes.\n\nSlobberdoffers are very quick but not too strong. However, coupled with a high agility rating, they are definitely an integral part of the People Protectors. ', '0'),
+('2', 'Hobo', '3', '4', '4', '3', '3', '1', '1', '1', 'When the zombie apocalypse finally arrived, the Hobo\'s finally found their place.\n\nThey stopped their eternal wars and decided to start attacking the zombies. Years of living on the streets of Towneville had hardened them. Years of begging meant that they knew where the humans would be. They were the first choice of the CPP. \n\nA force that doesn\'t know hunger or sleep. That knows exactly where the humans are. ', '0'),
+('3', 'Snake Milker', '3', '4', '4', '6', '4', '1', '1', '1', 'Years of taking abuse from some of the worlds most venomous snakes, this zoo-hand-turned-people-protector is a force to be reckoned with. Years of very little walking and constantly being bitten by things has turned him into one of the toughest people protectors. \n\nOh yes. A Snake Milker tough. But not very lucky.', '0'),
+('4', 'Barista', '3', '3', '6', '3', '3', '3', '1', '1', 'When the Zombies attacked, the Baristas attacked back. With reckless abandon.\n\nTired of dealing with uninfected humans they signed up in droves to become People Protectors. At first they were declined, but when the CPP caught them protecting people on their own time, they signed them up right away. \n\nThough they are not too fast and not too tough, the Barista\'s are very angry. And they gives them a strange strength. Rumor is, they also have no soul. ', '0');
 
 CREATE TABLE `item` (
    `id` int(11) not null auto_increment,
@@ -83,26 +83,15 @@ CREATE TABLE `item` (
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=7;
 
-INSERT INTO `item` (`id`, `name`, `cost`, `level`, `str`, `def`, `agi`, `luck`, `store_id`) VALUES 
-('4', 'Old Sword', '25', '1', '2', '0', '0', '0', '1'),
-('5', 'Old Sword', '25', '1', '2', '0', '0', '0', '1'),
-('6', 'Old Sword', '25', '1', '2', '0', '0', '0', '1');
-
 CREATE TABLE `message` (
    `id` int(11) unsigned not null auto_increment,
-   `from` varchar(50),
+   `fromuser` varchar(50),
+   `touser` varchar(50),
    `text` varchar(255),
    `post_time` int(11) unsigned,
    `classification` tinyint(3) unsigned,
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6;
-
-INSERT INTO `message` (`id`, `from`, `text`, `post_time`, `classification`) VALUES 
-('1', 'xangelo', 'heyo!', '1314225275', '1'),
-('2', 'xangelo', 'test?', '1314225364', '1'),
-('3', 'xangelo', 'test', '1314225368', '1'),
-('4', 'xangelo', 'testing again', '1314225413', '1'),
-('5', 'xangelo', 'test?', '1314294475', '1');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=38;
 
 CREATE TABLE `monster` (
    `id` int(11) not null auto_increment,
@@ -134,9 +123,6 @@ CREATE TABLE `news` (
    `approved` int(11) default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=5;
-
-INSERT INTO `news` (`id`, `title`, `post_date`, `posted_by`, `posted_by_id`, `news`, `approved`) VALUES 
-('4', 'Welcome', '1314304659', 'xangelo', '8', 'Welcome to the Rising Legends administration panel. From here you should be able to access most of the backend of the website. \n\nAt the moment the game is rather lacking in Monsters and Items. I would recommend that after you create a monster (assign it 0 gold and 0 exp) and then ask real players to test against it.\n\nAs for items, just keep in mind the price and the stat increases. \n\nAll your actions are logged, so if you do screw up... don\'t panic. Just email xangelo@gmail.com and let them know what happened.', '1');
 
 CREATE TABLE `owned_item` (
    `id` int(11) unsigned not null auto_increment,
@@ -183,10 +169,7 @@ CREATE TABLE `player` (
    `last_battled` tinyint(3) unsigned,
    `mining_exp` int(11) default '0',
    `copper` int(11) default '0',
+   `tin` int(11) default '1',
    `admin` int(11) default '0',
-   `coppyer` tinyint(3) unsigned,
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=9;
-
-INSERT INTO `player` (`id`, `username`, `password`, `email`, `class_id`, `total_hp`, `current_hp`, `total_mp`, `current_mp`, `str`, `tough`, `agi`, `luck`, `vit`, `mining`, `smithing`, `city`, `loc_x`, `loc_y`, `level`, `current_exp`, `skill_points`, `gold`, `stone`, `last_battled`, `mining_exp`, `copper`, `admin`, `coppyer`) VALUES 
-('8', 'xangelo', '9d6f6dbca62962790cfca436a9c7c156436b2d46', 'xangelo@gmail.com', '2', '180', '180', '3', '3', '17', '10', '11', '15', '12', '2', '1', '1', '44', '53', '12', '378', '4', '1543', '181', '1', '59', '0', '1', '3');
