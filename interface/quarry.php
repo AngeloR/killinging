@@ -40,12 +40,19 @@ class QuarryInterface implements BuildingInterface{
 		<form id="mine">
 			Mine for 
 			<select name="resource-type" id="resource-type">
+				
 				<option value="1" selected="selected">Stone</option>
 				<option value="2">Copper</option>
 				<option value="3">Tin</option>
+				<?php if($this->level > 1): ?>
 				<option value="4">Iron</option>
+				<?php endif; ?>
+				<?php if($this->level > 3): ?>
 				<option value="5">Silver</option>
+				<?php endif; ?>
+				<?php if($this->level > 6): ?>
 				<option value="6">Gold</option>
+				<?php endif; ?>
 			</select>
 			
 			<select name="length" id="length">

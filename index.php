@@ -61,6 +61,7 @@ function set_player() {
  * ROUTES
  */
 dispatch_get('/','homepage');
+dispatch_get('/class/:id','class_info');
 
 dispatch_post('/login','login');
 dispatch_post('/signup','signup');
@@ -93,6 +94,23 @@ function homepage() {
 	$classes = R::find('class','preform = 0 order by name asc');
 	set('classes',$classes);
 	return render('homepage.html.php');
+}
+
+function class_info($id) {
+	$class = R::findOne('class','id = ?',array($id));
+	
+	return json(array(
+		'id' => (int)$class->id,
+		'name' => $class->name,
+		'vit' => (int)$class->vit,
+		'str' => (int)$class->str,
+		'tough' => (int)$class->tough,
+		'agi' => (int)$class->agi,
+		'luck' => (int)$class->luck,
+		'mining' => (int)$class->mining,
+		'smithing' => (int)$class->smithing,
+		'description' => $class->description
+	));
 }
 
 function login() {
@@ -245,7 +263,7 @@ function movement_handler($dir) {
 }
 
 function fight_club_calc_damage($attacker,$defender) {
-	$damage = round($attacker->str * $attacker->agi * ($attacker->agi/2));
+	$damage = round($attacker->str * $attacker->str* ($attacker->agi/2));
 	
 	$defence = $defender->tough*+$defender->vit*($defender->tough/2);
 	
@@ -460,7 +478,7 @@ function mine() {
 					$player->mining_exp += 3;
 				}
 					
-				$player->stone = $player->stone + $stone;
+				$player->stone += $stone;
 				$old_level = $player->mining;
 				$player->mining_exp += 1;
 					
@@ -468,26 +486,27 @@ function mine() {
 				$_SESSION['player'] = serialize($player);
 					
 				if($old_level == $player->mining) {
-					return json(array((int)$stone,(bool)false));
+					return json(array((int)$stone,(bool)false,'stone'));
 				}
 				else {
-					return json(array((int)$stone,(bool)true));
+					return json(array((int)$stone,(bool)true, 'stone'));
 				}
 				
 				break;
 				
 			case 2:
 				//copper
+				
 				$rand = rand(0,15000);
 				$copper = ceil(1 + round(($player->mining * 0.85))) * $mine->level;
-				$crit = rand($player->luck,$player->luck+100) + rand(0,10000); 
+				$crit = rand($player->luck*.1,$player->luck) + rand(0,10000); 
 				
 				if($rand <= $crit) {
 					$copper += $copper;
 					$player->mining_exp += 3;
 				}
 					
-				$player->copper = $player->copper + $copper;
+				$player->copper += $copper;
 				$old_level = $player->mining;
 				$player->mining_exp += 1;
 					
@@ -495,15 +514,37 @@ function mine() {
 				$_SESSION['player'] = serialize($player);
 					
 				if($old_level == $player->mining) {
-					return json(array((int)$copper,(bool)false));
+					return json(array((int)$copper,(bool)false,'copper'));
 				}
 				else {
-					return json(array((int)$copper,(bool)true));
+					return json(array((int)$copper,(bool)true,'copper'));
 				}
 				break;
 				
 			case 3:
 				//tin
+				$rand = rand(0,15000);
+				$tin = ceil(1 + round(($player->mining * 0.85))) * $mine->level;
+				$crit = rand($player->luck*.1,$player->luck) + rand(0,10000); 
+				
+				if($rand <= $crit) {
+					$tin += $tin;
+					$player->mining_exp += 3;
+				}
+					
+				$player->tin += $tin;
+				$old_level = $player->mining;
+				$player->mining_exp += 1;
+					
+				R::store($player);
+				$_SESSION['player'] = serialize($player);
+					
+				if($old_level == $player->mining) {
+					return json(array((int)$tin,(bool)false,'tin'));
+				}
+				else {
+					return json(array((int)$tin,(bool)true,'tin'));
+				}
 				break;
 				
 			case 4: 

@@ -7,7 +7,7 @@ sandbox.register_module('monster', util.extend({
       , agi = parseInt($('#agi').val())
       , vit = parseInt($('#vit').val())
       , tough = parseInt($('#tough').val()) 
-      , damage = Math.round(str*agi*(agi/2))
+      , damage = Math.round(str*str*(agi/2))
       , defence = Math.round(tough*vit*(tough/2))
       , current_hp = Math.round(vit*tough + vit*(tough/2));
       

@@ -32,7 +32,7 @@ class Model_Player extends RedBean_SimpleModel {
 	}
 	
 	public function damage() {
-		return round($this->str * $this->agi + ($this->agi/2));
+		return round($this->str * $this->str + ($this->agi/2));
 	}
 	
 	public function defence() {

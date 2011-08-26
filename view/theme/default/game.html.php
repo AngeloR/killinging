@@ -3,21 +3,21 @@
 <html>
 	<head>
 		<title>Killinging</title>
-		<link href='http://fonts.googleapis.com/css?family=Reenie+Beanie|Droid+Sans' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=UnifrakturCook:700|Droid+Sans' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" type="text/css" href="<?php echo $THEMEDIR; ?>/css/style.css">
 	</head>
 	<body>
 		<table class="thegame">
 			<tr>
-				<td id="header" colspan="3">
-					<h1>Killinging - Make sure they're dead, because sometimes they're not</h1>
-					<a href="<?php echo url_for('logout'); ?>">logout</a>
+				<th id="header" colspan="3">
+					<h1>Killinging <div id="tagline">Protect the people. Save the people.</div></h1>
+					<a href="<?php echo url_for('logout'); ?>" id="logout">logout</a>
 				</td>
 			</tr>
 			<tr>
 				<td class="sidebar">
 					<h2><?php echo $player->username; ?>, level <span id="level"><?php echo $player->level; ?></span></h2>
-					<table width="100%">
+					<table width="100%" id="quick-stats">
 						<tr>
 							<th>HP: </th>
 							<td><span id="current_hp"><?php echo $player->current_hp.'</span>/<span id="total_hp">'.$player->total_hp; ?></span></td>
@@ -33,6 +33,13 @@
 						<tr>
 							<th>Exp: </th>
 							<td><span id="current_exp"><?php echo $player->current_exp.'</span>/<span class="id">'.$player->exp_to_level(); ?></span> (<span id="exp_percent"><?php echo round($player->current_exp/$player->exp_to_level() * 100); ?></span>%)</td>
+							<th>Copper: </th>
+							<td id="copper"><?php echo $player->copper; ?></td>
+						</tr>
+						<tr>
+							<th></th><td></td>
+							<th>Tin: </th>
+							<td id="tin"><?php echo $player->tin; ?></td>
 						</tr>
 					</table>
 					<hr>

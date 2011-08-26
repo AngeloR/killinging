@@ -1,0 +1,138 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-o-box-sizing: border-box;
+	box-sizing: border-box;
+	font-family: 'Droid Sans', sans-serif;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+	font-size: 0.833em;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.thegame {
+	width: 960px;
+	margin: 0 auto;
+}
+h1,h2,h3 {
+	font-weight: bold;
+}
+h1 {
+	font-family: 'UnifrakturCook', cursive;
+	font-size: 6em;
+	padding: 20px 0;
+}
+#tagline {
+	font-size: 0.3em;
+	font-family: 'Droid Sans', sans-serif;
+}
+h2 {
+	font-size: 1.5em;
+	padding-bottom: 10px;
+}
+h3 {
+	font-size: 1.2em;
+}
+#info {
+	border: solid 1px #ccc;
+}
+#info h3{
+	padding: 5px;
+}
+#info p {
+	padding: 5px;
+}
+.thegame td {
+	border: solid 0 #000;
+}
+.sidebar {
+	width: 25%;
+}
+label {
+	width: 120px;
+	text-align: right;
+	display: inline-block;
+	font-weight: bold;
+}
+#content, #stats {
+	border-width: 0 1px;
+}
+#content {
+	max-height: 500px;
+	overflow: auto;
+	height: 500px;
+}
+#footer {
+	font-size: 0.75em;
+	text-align: center;
+	padding: 5px;
+	border-width: 1px 0 0;
+}
+.help {
+	font-size: 0.75em;
+}
+td {
+	padding-bottom: 25px;
+}
+.stats td, .stats th{
+	padding: 5px;
+}
+.stats th {
+	font-weight: bold;
+	padding-right: 0;
+	padding-left: 10px;
+	text-align: right;
+}
+p {
+	line-height: 1.4em;
+	margin-bottom: 0.7em;
+}
+#announcement {
+	margin: 15px;
+	background-color: #eee;
+	border: solid 1px #999;
+	padding: 10px;
+}

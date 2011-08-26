@@ -374,8 +374,8 @@ sandbox.register_module('mine', util.extend({
 			, success: function(res) {
 				if(res !== undefined) {
 					console.log(res);
-					$('#resource-results').append('<li>You found '+res[0]+' stone</li>');
-					$('#stone').html(parseInt($('#stone').html()) + res[0]);
+					$('#resource-results').append('<li>You found '+res[0]+' '+res[2]+'</li>');
+					$('#'+res[2]).html(parseInt($('#'+res[2]).html()) + res[0]);
 					
 					if(res[1] === true) {
 						$('#resource-results').append('<li>You gained a level in mining!</li>');

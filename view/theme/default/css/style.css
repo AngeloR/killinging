@@ -58,12 +58,32 @@ table {
 	margin: 0 auto;
 }
 h1 {
-	font-family: 'Reenie Beanie', cursive;
-	font-size: 2em;
+	font-family: 'UnifrakturCook', cursive;
+	font-size: 6em;
+	padding: 20px 0;
+}
+h2 {
 	font-weight: bold;
+	font-size: 1.2em;
+	margin-bottom: 5px;
+}
+#tagline {
+	font-size: 0.3em;
+	font-family: 'Droid Sans', sans-serif;
+}
+#logout {
+	position: absolute;
+	top: 10px;
+	right: 10px;
 }
 .thegame td {
 	border: solid 0 #000;
+}
+#quick-stats td, #quick-stats th{
+	padding: 4px;
+}
+th {
+	font-weight: bold;
 }
 .sidebar {
 	width: 25%;
@@ -151,7 +171,8 @@ table.stats th {
 	width: 60px;
 	height: 60px;
 	position: absolute;
-	left: 10px;
+	left: 40%;
+	top: 10px;
 }
 #map-title {
 	font-size: 1.2em;
