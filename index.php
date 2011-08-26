@@ -6,6 +6,7 @@ include('lib/app.php');
 include('lib/limonade.php');
 include('lib/rb.php');
 
+include('class/ChatManager.php');
 
 include('interface/building.php');
 include('interface/store.php');
@@ -589,12 +590,13 @@ function upgrade_building($building_id) {
 function get_chat_messages($since = 0) {
 	$since = intval($since);
 	$time = time();
+	$player = unserialize($_SESSION['player']);
 
 	if($since < strtotime('-1 hour',$time)) {
 		$since = strtotime('-1 hour',$time);
 	}
 	
-	$messages = R::find('message','post_time >= ? order by post_time desc limit 30',array($since)); 
+	$messages = R::find('message','post_time >= ? and (touser is null or touser = ?) order by post_time desc limit 30',array($since,$player->username)); 
 	
 	$tmp = array();
 	foreach($messages as $i => $message) {
@@ -605,16 +607,11 @@ function get_chat_messages($since = 0) {
 }
 
 function post_chat_message() {
-	$time = time();
 	$player = unserialize($_SESSION['player']);
 	if(array_key_exists('message',$_POST) && !empty($_POST['message'])) {
-		$message = R::dispense('message');
-		$message->from = $player->username;
-		$message->text = trim($_POST['message']);
-		$message->post_time = $time;
-		$message->classification = $player->admin;
-		
-		R::store($message);
+		// Commands!
+		$chat = new ChatManager($_POST['message']);
+		$time = $chat->execute();
 		
 		return json((int)$time);
 	}

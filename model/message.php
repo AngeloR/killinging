@@ -4,9 +4,10 @@ class Model_Message extends RedBean_SimpleModel {
 	
 	public function tojson() {
 		return array(
-			'from' => $this->from,
+			'from' => $this->fromuser,
 			'text' => $this->text,
 			'classification' => (int)$this->classification,
+			'touser' => $this->touser
 		);
 	}
 }

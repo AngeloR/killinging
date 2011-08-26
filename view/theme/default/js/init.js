@@ -290,7 +290,6 @@ sandbox.register_module('chat', util.extend({
 			, data: {message: message}
 			, complete: function(){
 				$('#chat-button').attr('disabled',false);
-				sandbox.request_module('chat').since = res;
 				sandbox.request_module('chat').interval = setInterval(sandbox.request_module('chat').receive, 10000);
 			}
 			, success: function(res) {
@@ -312,16 +311,19 @@ sandbox.register_module('chat', util.extend({
 				
 				var tmp = '', message;
 				for(var i = 0, l = res.messages.length; i < l; ++i) {
-					message = '<div';
+					message = '<div class="message';
 					if(res.messages[i].classification == 1) {
-						message += ((res.messages[i].classification == 1)?' class="message admin">':'')
+						message += ((res.messages[i].classification == 1)?' admin':'');
 					}
 					else if(res.messages[i].classification == 2) {
-						message += ((res.messages[i].classification == 1)?' class="message server">':'')
+						message += ((res.messages[i].classification == 1)?' server':'');
 					}
-					else {
-						message += ' class="message">';
+					
+					if(res.messages[i].classification !== 2 && res.messages[i].touser !== null) {
+						message += ' pm';
 					}
+					
+					message += '">';
 					message += '<span class="from">'+res.messages[i].from+':</span> '+res.messages[i].text+'</div>';
 					tmp += message;
 				}

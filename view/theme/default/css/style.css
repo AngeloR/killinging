@@ -131,6 +131,9 @@ table.stats th {
 .message.admin {
 	color: #0000aa;
 }
+.message.pm {
+	color: #a0a;
+}
 
 /** MAP **/
 #location {
