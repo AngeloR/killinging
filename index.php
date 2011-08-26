@@ -596,14 +596,21 @@ function get_chat_messages($since = 0) {
 		$since = strtotime('-1 hour',$time);
 	}
 	
-	$messages = R::find('message','post_time >= ? and (touser is null or touser = ?) order by post_time desc limit 30',array($since,$player->username)); 
+	$messages = R::find('message','post_time > ? and (touser is null or touser = ?) order by post_time desc limit 30',array($since,$player->username)); 
 	
-	$tmp = array();
-	foreach($messages as $i => $message) {
-		$tmp[] = $message->tojson();
+	if(!empty($messages)) {
+		$tmp = array();
+		foreach($messages as $i => $message) {
+			$tmp[] = $message->tojson();
+		}
+	
+		reset($messages);
+		$c = current($messages);
+		return json(array('time' => (int)$c->post_time, 'messages' => $tmp));
 	}
-	
-	return json(array('time' => (int)$time, 'messages' => $tmp));
+	else {
+		return json(array('time' => (int)$time, 'messages' => array()));
+	}
 }
 
 function post_chat_message() {
@@ -613,7 +620,7 @@ function post_chat_message() {
 		$chat = new ChatManager($_POST['message']);
 		$time = $chat->execute();
 		
-		return json((int)$time);
+		return json((int)$time-1);
 	}
 }
 

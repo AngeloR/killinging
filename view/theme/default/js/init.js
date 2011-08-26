@@ -296,6 +296,7 @@ sandbox.register_module('chat', util.extend({
 				if(res !== undefined) {
 					
 					$('#message').val('');
+					sandbox.request_module('chat').since = res;
 					sandbox.request_module('chat').receive();
 				}
 			}

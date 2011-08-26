@@ -9,6 +9,8 @@ class ChatManager {
   public function __construct($message) {
     $this->player = unserialize($_SESSION['player']);
     
+    $this->time = time();
+    
     $this->msg = R::dispense('message');
     $this->msg->post_time = $this->time = time();
     $this->msg->fromuser = $this->player->username;
