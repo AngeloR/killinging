@@ -20,9 +20,9 @@ return array(
         ),
         'production' => array(
             'host' => 'localhost',
-            'user' => '',
-            'pass' => '',
-            'name' => ''
+            'user' => 'feethave_m0f45a',
+            'pass' => '51mb4',
+            'name' => 'feethave_rpg'
         ),
     ),
     'session' => 'killinging',

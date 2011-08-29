@@ -36,8 +36,7 @@ function configure() {
  * them to the application theme.
  */
 function before() {
-	//option('base_uri','/sobuyit');
-	
+
 	option('views_dir','view/theme/default/');
     
 	set('THEME','default');
@@ -119,6 +118,7 @@ function login() {
 	
 	if(!empty($player)) {
 		$_SESSION['player'] = serialize($player);
+		$_SESSION['flash'] = array();
 		redirect_to('game');
 	}
 	else {
@@ -182,6 +182,10 @@ function game() {
 	
 	$buildings = R::find('building_type','1 order by cost asc');
 	set('buildings',$buildings);
+	
+	set('gamemessages',$_SESSION['flash']);
+	$_SESSION['flash'] = array();
+	
 	
 	return render('game.html.php');
 }
@@ -279,7 +283,7 @@ function fight_club_calc_damage($attacker,$defender) {
 	$damage = floor($damage - $defence);
 	
 	if($damage <= 0) {
-		$damage = ($crit)?1:0;
+		$damage = 0;
 	}
 	
 	return array($damage,$crit);
@@ -345,13 +349,18 @@ function fight_handler() {
 	 				$player->current_hp = $winner->current_hp;
 	 				$player->gold += $monster->gold;
 	 				$player->current_exp += $monster->exp;
+					R::store($player);
+					$_SESSION['player'] = serialize($player);
 	 			}
 	 			else {
 	 				$player->gold = 0;
+					R::store($player);
+					$_SESSION['player'] = serialize($player);
+					$_SESSION['flash'][] = 'Whoops, the '.$monster->name.' killed you! You have been sent to '.$player->loc_x.','.$player->loc_y;
+					return json('f331d3ad');
 	 			}
 	 			
-	 			R::store($player);
-	 			$_SESSION['player'] = serialize($player);
+	 			
 	 		}
 	 		else {
 	 			return json(array(
@@ -596,7 +605,7 @@ function get_chat_messages($since = 0) {
 		$since = strtotime('-1 hour',$time);
 	}
 	
-	$messages = R::find('message','post_time > ? and (touser is null or touser = ?) order by post_time desc limit 30',array($since,$player->username)); 
+	$messages = R::find('message','post_time > ? and (touser is null or (touser = ? or fromuser = ?)) order by post_time desc limit 30',array($since,$player->username,$player->username)); 
 	
 	if(!empty($messages)) {
 		$tmp = array();

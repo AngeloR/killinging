@@ -15,13 +15,4 @@
     <h3>Most Gold</h3>
     <?php echo $gold; ?>
   </div>
-  
-  <div id="infobox">
-    <h3>Notifications</h3>
-    <form action="<?php echo url_for('admin','news'); ?>" method="post">
-    <label>Title</label> <input type="text" name="title"><br>
-    <textarea name="news"></textarea><br>
-    <button type="submit">Add new notification</button>
-    </form>
-  </div>
 </div>

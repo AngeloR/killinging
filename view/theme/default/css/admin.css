@@ -47,14 +47,14 @@ select{
 margin-top:20px;
 }
 #content{
-	width:740px;
+	width:700px;
 	float:left;
 	margin:10px 0 10px 0;
 	padding:10px;
 }
 #sidebar{
 	background:#FFF;
-	width:200px;
+	width:240px;
 	float:right;
 	margin:10px 0 10px 0;
 	padding:10px;
@@ -91,6 +91,24 @@ margin-top:20px;
 	padding:2px;
 	font-size:14px;
 }
+/*********************
+  Chat
+*********************/
+#chat-messages {
+	height: 380px;
+	overflow: auto;
+}
+.message > .from {
+	font-weight: bold;
+	cursor: pointer;
+}
+.message.admin {
+	color: #0000aa;
+}
+.message.pm {
+	color: #a0a;
+}
+
 /*********************
   TopMenu, Top-Panel
 *********************/
@@ -238,7 +256,7 @@ thead{
 	display:inline:
 }
 #infobox{
-	width:355px;
+	width:48%;
 	float:left;
 	margin-top:10px;
 }
@@ -247,7 +265,7 @@ thead{
 	font-size:14px;
 }
 .margin-left{
-	margin-left:10px;
+	margin-left: 4%;
 }
 #rightnow .reallynow {
 	padding: 5px;

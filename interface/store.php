@@ -26,7 +26,7 @@ class StoreInterface implements BuildingInterface{
 	}
 	
 	public function display() {
-		echo '<img src="/killinging/tiles/shop.png" width="32" height="32" class="building">';
+		echo '<img src="/tiles/shop.png" width="32" height="32" class="building">';
 	}
 	
 	public function management() {

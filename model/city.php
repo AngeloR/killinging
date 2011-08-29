@@ -39,7 +39,7 @@ class Model_City extends RedBean_SimpleModel {
 				
 				$key =	$r.','.$g.','.$b;
 				if(array_key_exists($key,$this->land)) {
-					echo '<img src="tiles/'.$this->land[$key]['name'].'.png" width="60" height="60">';
+					echo '<img src="/tiles/'.$this->land[$key]['name'].'.png" width="60" height="60">';
 				}
 			}
 			echo '<br>';

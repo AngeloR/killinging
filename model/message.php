@@ -7,7 +7,8 @@ class Model_Message extends RedBean_SimpleModel {
 			'from' => $this->fromuser,
 			'text' => $this->text,
 			'classification' => (int)$this->classification,
-			'touser' => $this->touser
+			'touser' => $this->touser,
+			'time' => $this->post_time
 		);
 	}
 }

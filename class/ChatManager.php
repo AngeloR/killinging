@@ -39,7 +39,7 @@ class ChatManager {
     $toplayer = R::findOne('player','username = ?',array($to));
     
     if(!empty($toplayer)) {
-      $this->msg->touser = $this->player->username;
+      $this->msg->touser = $toplayer->username;
       $this->msg->text = trim($message);
       $this->msg->classification = 0;
     }

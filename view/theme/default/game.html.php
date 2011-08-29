@@ -11,7 +11,12 @@
 			<tr>
 				<th id="header" colspan="3">
 					<h1>Killinging <div id="tagline">Protect the people. Save the people.</div></h1>
-					<a href="<?php echo url_for('logout'); ?>" id="logout">logout</a>
+						<div id="extra-nav">
+						<?php
+						if($player->admin) { echo '<a href="'.url_for('admin').'" id="admin">admin panel</a>'; }
+						?>
+						<a href="<?php echo url_for('logout'); ?>" id="logout">logout</a>
+					</div>
 				</td>
 			</tr>
 			<tr>
@@ -32,7 +37,7 @@
 						</tr>
 						<tr>
 							<th>Exp: </th>
-							<td><span id="current_exp"><?php echo $player->current_exp.'</span>/<span class="id">'.$player->exp_to_level(); ?></span> (<span id="exp_percent"><?php echo round($player->current_exp/$player->exp_to_level() * 100); ?></span>%)</td>
+							<td><span id="current_exp"><?php echo $player->current_exp.'</span>/<span id="total_exp">'.$player->exp_to_level(); ?></span> (<span id="exp_percent"><?php echo round($player->current_exp/$player->exp_to_level() * 100); ?></span>%)</td>
 							<th>Copper: </th>
 							<td id="copper"><?php echo $player->copper; ?></td>
 						</tr>
@@ -172,9 +177,9 @@
 												<select name="monster" id="monster">
 													<?php foreach($monsters as $monster):?>
 														<?php if($monster->id == $player->last_battled): ?>
-														<option value="<?php echo $monster->id; ?>" selected="selected"><?php echo $monster->name; ?></option>
+														<option value="<?php echo $monster->id; ?>" selected="selected"><?php echo $monster->name; ?> (<?php echo $monster->level; ?>)</option>
 														<?php else: ?>
-														<option value="<?php echo $monster->id; ?>"><?php echo $monster->name; ?></option>
+														<option value="<?php echo $monster->id; ?>"><?php echo $monster->name; ?> (<?php echo $monster->level; ?>)</option>
 														<?php endif; ?>
 														
 													<?php endforeach; ?>
@@ -225,10 +230,21 @@
 				</td>
 			</tr>
 		</table>
+		
 	</body>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
 	<script type="text/javascript" src="<?php echo $THEMEDIR; ?>/js/jquery.simplemodal.1.4.1.min.js"></script>
+	<script type="text/javascript" src="<?php echo $THEMEDIR; ?>/js/jquery.gritter.min.js"></script>
 	<script type="text/javascript" src="<?php echo $THEMEDIR; ?>/js/jquery.tabify.js"></script>
 	<script type="text/javascript" src="<?php echo $THEMEDIR; ?>/js/vader.js"></script>
+	<script type="text/javascript">
+	<?php
+		if(isset($gamemessages)) : ?>
+			window.gamemessages = [];
+			<?php foreach($gamemessages as $message) : ?>		
+				window.gamemessages.push('<?php echo $message; ?>');
+			<?php endforeach; ?>
+		<?php endif; ?>
+	</script>
 	<script type="text/javascript" src="<?php echo $THEMEDIR; ?>/js/init.js"></script>
 </html>

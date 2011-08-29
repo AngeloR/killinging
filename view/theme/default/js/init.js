@@ -116,6 +116,21 @@ sandbox.register_module('item',util.extend({
 	}
 }, sandbox.module));
 
+sandbox.register_module('gamemessages', util.extend({
+	title: 'Game Message'
+	, description: 'Displays notifications to users. Don\'t use this. Use Gritter directly'
+	, initialize: function() {
+		
+		$.extend($.gritter.options, { 
+        position: 'bottom-right'
+			});
+		
+		$.each(gamemessages, function(i,obj){
+			$.gritter.add({title: 'Game Notice', text: obj});
+		});
+	}
+}, sandbox.module));
+
 sandbox.register_module('fight-club', util.extend({
 	title: 'Fight Club'
 	, description: 'Handles the JS fights'
@@ -126,12 +141,7 @@ sandbox.register_module('fight-club', util.extend({
 		}
 		tmp += '</ul>';
 		
-		if(res.stats.current_hp === 0) {
-			tmp += '<div class="error notification">The '+res.monster+' killed you in '+res.rounds+' round'+((res.rounds < 2)?'':'\s')+'!</div>';
-		}
-		else {
-			tmp += '<div class="good notification">You killed the '+res.monster+' in '+res.rounds+' round'+((res.rounds < 2)?'':'\s')+'!</div>';
-		}
+		tmp += '<div class="good notification">You killed the '+res.monster+' in '+res.rounds+' round'+((res.rounds < 2)?'':'\s')+'!</div>';
 		
 		$('#current_hp').html(res.stats.current_hp);
 		$('#total_hp').html(res.stats.total_hp);
@@ -166,7 +176,12 @@ sandbox.register_module('fight-club', util.extend({
 					}, 2000);
 				}
 				, success: function(res) {
-					sandbox.request_module('fight-club').render(res);
+					if(res !== 'f331d3ad') {
+						sandbox.request_module('fight-club').render(res);
+					}
+					else {
+						window.location = '/?/game';
+					}
 				}
 			});
 			
@@ -276,7 +291,8 @@ sandbox.register_module('chat', util.extend({
 	title: 'Chat'
 	, description: 'Chat manager'
 	, interval: undefined
-	, since: undefined
+	, since: 0
+	, last_check: 0
 	, say: function(message) {
 		var chat = sandbox.request_module('chat');
 		if(chat.interval !== undefined) {
@@ -308,7 +324,9 @@ sandbox.register_module('chat', util.extend({
 			, dataType: 'json'
 			, type: 'get'
 			, success: function(res) {
-				sandbox.request_module('chat').since = res.time;
+				var chat = sandbox.request_module('chat');
+				chat.last_check = sandbox.request_module('chat').since;
+				chat.since = res.time;
 				
 				var tmp = '', message;
 				for(var i = 0, l = res.messages.length; i < l; ++i) {
@@ -322,6 +340,9 @@ sandbox.register_module('chat', util.extend({
 					
 					if(res.messages[i].classification !== 2 && res.messages[i].touser !== null) {
 						message += ' pm';
+						if(res.messages[i].time > chat.last_check && res.messages[i].time < chat.since) {
+							$.gritter.add({title: 'PM from '+res.messages[i].from, text: res.messages[i].text});
+						}
 					}
 					
 					message += '">';
@@ -348,6 +369,11 @@ sandbox.register_module('chat', util.extend({
 			this.interval = setInterval(sandbox.request_module('chat').receive, 10000);
 			sandbox.request_module('chat').receive();
 		}
+		
+		$('.from').live('click',function(e){
+			$('#message').val('/m '+$(this).html().split(':')[0]+' ');
+			$('#message').focus();
+		});
 	}
 }, sandbox.module));
 

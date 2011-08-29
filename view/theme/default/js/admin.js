@@ -43,3 +43,87 @@ sandbox.register_module('monster', util.extend({
     });
   }
 }, sandbox.module));
+
+sandbox.register_module('chat', util.extend({
+	title: 'Chat'
+	, description: 'Chat manager'
+	, interval: undefined
+	, since: undefined
+	, say: function(message) {
+		var chat = sandbox.request_module('chat');
+		if(chat.interval !== undefined) {
+			clearInterval(chat.interval);
+		}
+
+		$.ajax({
+			url: 'index.php/?/chat'
+			, dataType: 'json'
+			, type: 'post'
+			, data: {message: message}
+			, complete: function(){
+				$('#chat-button').attr('disabled',false);
+				sandbox.request_module('chat').interval = setInterval(sandbox.request_module('chat').receive, 10000);
+			}
+			, success: function(res) {
+				if(res !== undefined) {
+					
+					$('#message').val('');
+					sandbox.request_module('chat').since = res;
+					sandbox.request_module('chat').receive();
+				}
+			}
+		});
+	}
+	, receive: function() {
+		$.ajax({
+			url: 'index.php/?/chat/'+sandbox.request_module('chat').since
+			, dataType: 'json'
+			, type: 'get'
+			, success: function(res) {
+				sandbox.request_module('chat').since = res.time;
+				
+				var tmp = '', message;
+				for(var i = 0, l = res.messages.length; i < l; ++i) {
+					message = '<div class="message';
+					if(res.messages[i].classification == 1) {
+						message += ((res.messages[i].classification == 1)?' admin':'');
+					}
+					else if(res.messages[i].classification == 2) {
+						message += ((res.messages[i].classification == 1)?' server':'');
+					}
+					
+					if(res.messages[i].classification !== 2 && res.messages[i].touser !== null) {
+						message += ' pm';
+					}
+					
+					message += '">';
+					message += '<span class="from">'+res.messages[i].from+':</span> '+res.messages[i].text+'</div>';
+					tmp += message;
+				}
+				$('#chat-messages').prepend(tmp);
+				
+				
+			}
+			, error: function(r) {
+				console.log(r.responseText);
+			}
+		});
+	}
+	, initialize: function() {
+		$('#chat-form').submit(function(e){
+			sandbox.request_module('chat').say($('#message').val());
+			$('#chat-button').attr('disabled',true);
+			return false;
+		});
+		
+		if(this.interval === undefined) {
+			this.interval = setInterval(sandbox.request_module('chat').receive, 10000);
+			sandbox.request_module('chat').receive();
+		}
+		
+		$('.from').live('click',function(e){
+			$('#message').val('/m '+$(this).html().split(':')[0]+' ');
+      $('#message').focus();
+		});
+	}
+}, sandbox.module));

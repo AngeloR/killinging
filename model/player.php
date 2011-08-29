@@ -3,11 +3,16 @@
 class Model_Player extends RedBean_SimpleModel {
 	
 	public function update() {
-		if($this->current_exp > $this->exp_to_level()) {
+		if($this->current_exp >= $this->exp_to_level()) {
 			
-			$this->current_exp -= $this->exp_to_level();
-			$this->level += 1;
-			$this->skill_points += 2;
+			$times = 0;
+			while($this->current_exp >= $this->exp_to_level()) {
+				$this->current_exp -= $this->exp_to_level();
+				++$times;
+			}
+			
+			$this->level = $this->level + (1*$times);
+			$this->skill_points = $this->skill_points + (1*$times);
 
 			$this->total_hp = $this->total_hp();
 			$this->current_hp = $this->total_hp;
@@ -18,8 +23,11 @@ class Model_Player extends RedBean_SimpleModel {
 			$this->mining += 1;
 		}
 		
-		if($this->current_hp < 0) {
-			$this->current_hp = 0;
+		if($this->current_hp <= 0) {
+			$this->current_hp = $this->total_hp();
+			$this->city = 1;
+			$this->loc_x = 50;
+			$this->loc_y = 50;
 		}
 		
 		if(isset($this->name)) {
@@ -69,6 +77,8 @@ class Model_Player extends RedBean_SimpleModel {
 		$this->agi = $class->agi;
 		$this->luck = $class->luck;
 		
+		$this->level = 1;
+		
 		
 		$this->total_hp = $this->total_hp();
 		$this->current_hp = $this->total_hp;
@@ -82,7 +92,7 @@ class Model_Player extends RedBean_SimpleModel {
 	}
 	
 	public function exp_to_level() {
-		return floor(log($this->level + 1) * $this->level * 100);
+		return floor((log($this->level + 1) * $this->level * 100)/2);
 	}
 	
 	public function exp_to_mining() {

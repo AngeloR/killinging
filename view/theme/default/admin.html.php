@@ -15,11 +15,10 @@
             	<ul>
                 	<li<?php echo (strpos(request_uri(),'/admin')==0 && request_uri() == '/admin')?' class="current"':''; ?>><a href="<?php echo url_for('admin'); ?>">Dashboard</a></li>
                     <li<?php echo (strpos(request_uri(),'/monsters')==6)?' class="current"':''; ?>><a href="<?php echo url_for('admin','monsters'); ?>">Monsters</a></li>
-                    <li><a href="users.html">Users</a></li>
+                    <li><a href="#">Users</a></li>
                     <li><a href="#">Items</a></li>
                     <li><a href="#">Buildings</a></li>
                     <li><a href="#">Statistics</a></li>
-                    <li><a href="#">Moderation</a></li>
               </ul>
           </div>
       </div>
@@ -36,10 +35,11 @@
             <div id="content"><?php echo $content; ?></div>
             <div id="sidebar">
               <ul>
-                <li><h3><a href="#" class="house">Admin Notifications</a></h3></li>
-                <?php foreach($news as $i=>$new): ?>
-                <a href="<?php echo url_for('admin','news',$new->id); ?>"><?php echo $new->title; ?></a>
-                <?php endforeach; ?>
+                <li><h3><a href="#" class="house">Chat</a></h3></li>
+                <form action="/?/chat" method="post" id="chat-form">
+									<input type="text" name="message" id="message"> <button type="submit" id="chat-button">Say</button>
+								</form>
+								<div id="chat-messages"></div>
               </ul>
                 
             </div>

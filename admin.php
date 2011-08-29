@@ -12,6 +12,12 @@ dispatch_put('/admin/monsters','add_monster');
 dispatch_post('/admin/monsters/:id','update_monster');
 dispatch_delete('/admin/monsters/:id','delete_monster');
 
+dispatch_get('/admin/items','get_items');
+dispatch_get('/admin/items/:id','get_item');
+dispatch_put('/admin/items','add_item');
+dispatch_delete('/admin/items/:id','delete_item');
+dispatch_post('/admin/items/:id','update_item');
+
 function is_admin() {
   if(array_key_exists('player',$_SESSION) && !empty($_SESSION['player'])) {
   $player = unserialize($_SESSION['player']);
@@ -29,6 +35,10 @@ function is_admin() {
   redirect_to('/');
 }
 
+function modify($val,$row) {
+  return '<a href="'.url_for('admin','user',$row['id']).'">'.$val.'</a>'; 
+}
+
 function admin() {
   $player = is_admin();
   
@@ -38,20 +48,17 @@ function admin() {
     'username' => 'Username',
     'level' => 'Level'
   ));
-  $level_dg->modify('username', function($val,$row){
-    return '<a href="'.url_for('admin','user',$row['id']).'">'.$val.'</a>'; 
-  });
   
-  $gold = R::getAll('select id,username,level,gold from player order by gold asc, username asc limit 5');
+  $level_dg->modify('username', 'modify');
+  
+  $gold = R::getAll('select id,username,level,gold from player order by gold desc, username asc limit 5');
   $gold_dg = new OPCDataGrid($gold);
   $gold_dg->fields(array(
     'username' => 'Username',
     'level' => 'Level',
     'gold' => 'Gold'
   ));
-  $gold_dg->modify('username', function($val,$row){
-    return '<a href="'.url_for('admin','user',$row['id']).'">'.$val.'</a>'; 
-  });
+  $gold_dg->modify('username', 'modify');
   
   $submenu = array(
     
@@ -77,6 +84,10 @@ function add_notification() {
   return admin();
 }
 
+function monsters_modify($val,$row) {
+  return '<a href="'.url_for('admin','monsters',$row['id']).'">'.$val.'</a>';
+}
+
 function get_monsters() {
   $player = is_admin();
   
@@ -87,9 +98,7 @@ function get_monsters() {
     'name' => 'Name',
     'level' => 'Level'
   ));
-  $dg->modify('name', function($val,$row){
-    return '<a href="'.url_for('admin','monsters',$row['id']).'">'.$val.'</a>';
-  });
+  $dg->modify('name', 'monsters_modify');
   
   $submenu = array(
     array('url' => url_for('admin','monsters'), 'name' => 'View List'),
