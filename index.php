@@ -72,6 +72,7 @@ dispatch_get('/game','game');
 
 dispatch_get('/move/:dir','movement_handler');
 dispatch_post('/fight','fight_handler');
+dispatch_post('/pvp','pvp_handler');
 dispatch_get('/item/info/:id','get_item_info');
 
 dispatch_get('/inventory/info/:id','get_inventory_info');
@@ -159,22 +160,13 @@ function signup() {
 }
 
 
-function chat_message($message) {
-	$message = R::dispense('message');
-	$message->from = 'Server';
-	$message->text = $message;
-	$message->post_time = time();
-	$message->classification = 2;
-	
-	R::store($message);
-}
-
-
-
 function game() {
 	$player = unserialize($_SESSION['player']);
 	
-	$city = R::findOne('city','id = ?',array($player->city));
+	$city = R::findOne('city','zone = ? and min_x <= ? and min_y <= ? and max_x >= ? and max_x >= ?',array($player->zone,$player->loc_x,$player->loc_y,$player->loc_x,$player->loc_y));
+	if(empty($city)) {
+		$city = R::findOne('city','id = 1');
+	}
 	set('city',$city);
 	
 	$monsters = R::find('monster','1 order by level asc, name asc');
@@ -193,7 +185,10 @@ function game() {
 
 function movement_handler($dir) { 
 	$player = unserialize($_SESSION['player']);
-	$city = R::findOne('city','id = ?',array($player->city));
+	$city = R::findOne('city','zone = ? and min_x <= ? and min_y <= ? and max_x >= ? and max_x >= ?',array($player->zone,$player->loc_x,$player->loc_y,$player->loc_x,$player->loc_y));
+	if(empty($city)) {
+		$city = R::findOne('city','id = 1');
+	}
 	switch($dir) {
 		case 'ne':
 			if($city->can_move_to($player->loc_x + 1, $player->loc_y - 1)) {
@@ -262,7 +257,11 @@ function movement_handler($dir) {
 
 		R::store($player);
 		$_SESSION['player'] = serialize($player);
+		
 	}
+	
+	$players = R::find('player','city = ? and loc_x = ? and loc_y = ? and player_id != ?',array($player->city,$player->loc_x,$player->loc_y,$player->id));
+	set('players',$players);
 	
 	return game();
 }
@@ -307,10 +306,10 @@ function fight_club($p1,$p2) {
 		$second->current_hp -= $damage[0];
 		
 		if(isset($first->name) && !empty($first->name)) {
-			$messages[] = $first->name. (($damage[1])?' critically':'') .' attacked '.$second->username.' for '.$damage[0].' damage.';
+			$messages[] = 'The '.$first->name.' '.(($damage[0]==0)?'missed':'attacked '.$second->username.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
 		}
 		else {
-			$messages[] = $first->username. (($damage[1])?'critically':'') .' attacked '.$second->name.' for '.$damage[0].' damage.';
+			$messages[] = 'You '. (($damage[0]==0)?'missed':'attacked the '.$first->name.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
 		}
 		
 		if($second->current_hp <= 0) {
@@ -321,10 +320,10 @@ function fight_club($p1,$p2) {
 		$first->current_hp -= $damage[0];
 		
 		if(isset($second->name)) {
-			$messages[] = $second->name. (($damage[1])?'critically':'') .' attacked '.$first->username.' for '.$damage[0].' damage.';
+			$messages[] = 'The '.$second->name.' '.(($damage[0]==0)?'missed':'attacked '.$first->username.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
 		}
 		else {
-			$messages[] = $second->username. (($damage[1])?'critically':'') .' attacked '.$first->name.' for '.$damage[0].' damage.';
+			$messages[] = 'You '. (($damage[0]==0)?'missed':'attacked the '.$second->name.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
 		}
 	}
 	
@@ -335,7 +334,10 @@ function fight_club($p1,$p2) {
 }
 
 function fight_handler() {
-	 $monster = R::findOne('monster','id = ?',array($_POST['monster_id']));
+	if(array_key_exists('battle',$_SESSION) && !empty($_SESSION['battle'])) {
+		
+	 $monster = unserialize($_SESSION['battle']);
+	 unset($_SESSION['battle']);
 	 if(!empty($monster)) {
 	 		$player = unserialize($_SESSION['player']);
 	 		// store the monster as the most recent battle
@@ -384,8 +386,41 @@ function fight_handler() {
 	 	 		'level' => (int)$player->level
 	 	 )
 	 ));
+	}
 }
-
+/*
+function pvp_handler() {
+	$player = unserialize($_SESSION['player']);
+	if($player->city == 1) {
+	$other_player = R::findOne('player','id = ? and loc_x = ? and loc_y = ? and city = ?',array($_POST['player'],$player->loc_x,$player->loc_y,$player->city));
+	if(!empty($other_player)) {
+		if($player->current_hp > 0 && $other_player->current_hp > 0) {
+			list($winner,$rounds,$messages) = fight_club($player,$other_player);
+			
+			if(isset($winner->username)) {
+	 			// player won
+	 			$player->current_hp = $winner->current_hp;
+	 			$player->gold += $monster->gold;
+				$player->current_exp += $monster->exp;
+				R::store($player);
+				$_SESSION['player'] = serialize($player);
+			}
+	 		else {
+	 			$player->gold = 0;
+				R::store($player);
+				$_SESSION['player'] = serialize($player);
+				$_SESSION['flash'][] = 'Whoops, the '.$monster->name.' killed you! You have been sent to '.$player->loc_x.','.$player->loc_y;
+				return json('f331d3ad');
+	 		}
+		}
+		else {
+			return json(array(
+				'messages' => array('One of you is quite dead... but not because of this battle.')
+			));
+		}
+	}
+}
+//*/
 function get_item_info($id) {
 	$item = R::findOne('item','id = ?',array($id));
 	return json($item->tojson());

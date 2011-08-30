@@ -1,6 +1,6 @@
 --
 -- MySQL 5.5.8
--- Fri, 26 Aug 2011 22:14:10 +0000
+-- Tue, 30 Aug 2011 21:11:39 +0000
 --
 
 CREATE TABLE `building` (
@@ -20,9 +20,9 @@ CREATE TABLE `building` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=4;
 
 INSERT INTO `building` (`id`, `building_type`, `owner`, `owner_type`, `map_id`, `loc_x`, `loc_y`, `name`, `level`, `cost`, `stone`) VALUES 
-('1', '1', '8', 'player', '1', '49', '50', 'General Store', '1', '150000000', '100000'),
-('2', '1', '9', 'player', '1', '43', '44', 'Your Store', '1', '150000000', '100000'),
-('3', '3', '8', 'player', '1', '47', '53', 'Angelo\'s Quarry', '1', '125000000', '0');
+('1', '1', '8', 'player', '2', '49', '50', 'General Store', '1', '150000000', '100000'),
+('2', '1', '9', 'player', '2', '43', '44', 'Your Store', '1', '150000000', '100000'),
+('3', '3', '8', 'player', '2', '47', '53', 'Angelo\'s Quarry', '1', '125000000', '0');
 
 CREATE TABLE `building_type` (
    `id` int(11) not null auto_increment,
@@ -42,11 +42,17 @@ INSERT INTO `building_type` (`id`, `name`, `cost`, `time`, `description`, `stone
 CREATE TABLE `city` (
    `id` int(11) not null auto_increment,
    `name` varchar(150),
+   `min_x` int(11),
+   `min_y` int(11),
+   `max_x` int(11),
+   `max_y` int(11),
+   `zone` int(11) default '1',
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=4;
 
-INSERT INTO `city` (`id`, `name`) VALUES 
-('1', 'New South San Fresno');
+INSERT INTO `city` (`id`, `name`, `min_x`, `min_y`, `max_x`, `max_y`, `zone`) VALUES 
+('1', 'Wilderness', '', '', '', '', '1'),
+('2', 'New South San Fresno', '40', '40', '55', '55', '1');
 
 CREATE TABLE `class` (
    `id` int(11) not null auto_increment,
@@ -83,6 +89,8 @@ CREATE TABLE `item` (
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=7;
 
+-- [Table `item` is empty]
+
 CREATE TABLE `message` (
    `id` int(11) unsigned not null auto_increment,
    `fromuser` varchar(50),
@@ -91,7 +99,10 @@ CREATE TABLE `message` (
    `post_time` int(11) unsigned,
    `classification` tinyint(3) unsigned,
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=38;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=39;
+
+INSERT INTO `message` (`id`, `fromuser`, `touser`, `text`, `post_time`, `classification`) VALUES 
+('38', 'xangelo', '', 'yep', '1314732127', '0');
 
 CREATE TABLE `monster` (
    `id` int(11) not null auto_increment,
@@ -105,13 +116,18 @@ CREATE TABLE `monster` (
    `exp` int(11) default '5',
    `gold` int(11) default '0',
    `_method` varchar(255),
+   `city` int(11) default '1',
+   `min_x` int(11),
+   `min_y` int(11),
+   `max_x` int(11),
+   `max_y` int(11),
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=4;
 
-INSERT INTO `monster` (`id`, `name`, `level`, `current_hp`, `vit`, `str`, `tough`, `agi`, `exp`, `gold`, `_method`) VALUES 
-('1', 'Missingno', '10', '180', '12', '10', '10', '10', '200', '5', ''),
-('2', 'Rat', '1', '16', '4', '2', '2', '4', '2', '1', ''),
-('3', 'Vagabong', '3', '45', '5', '8', '6', '4', '12', '10', 'put');
+INSERT INTO `monster` (`id`, `name`, `level`, `current_hp`, `vit`, `str`, `tough`, `agi`, `exp`, `gold`, `_method`, `city`, `min_x`, `min_y`, `max_x`, `max_y`) VALUES 
+('1', 'Missingno', '10', '180', '12', '10', '10', '10', '200', '5', '', '1', '', '', '', ''),
+('2', 'Rat', '1', '16', '4', '2', '2', '4', '2', '1', '', '2', '40', '40', '60', '60'),
+('3', 'Vagabong', '3', '45', '5', '8', '6', '4', '12', '10', 'put', '2', '45', '45', '70', '70');
 
 CREATE TABLE `news` (
    `id` int(11) unsigned not null auto_increment,
@@ -123,6 +139,8 @@ CREATE TABLE `news` (
    `approved` int(11) default '0',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=5;
+
+-- [Table `news` is empty]
 
 CREATE TABLE `owned_item` (
    `id` int(11) unsigned not null auto_increment,
@@ -158,7 +176,7 @@ CREATE TABLE `player` (
    `vit` int(11),
    `mining` int(11),
    `smithing` int(11),
-   `city` set('1'),
+   `zone` int(11) default '1',
    `loc_x` tinyint(3) unsigned,
    `loc_y` tinyint(3) unsigned,
    `level` int(11) default '1',
@@ -171,5 +189,11 @@ CREATE TABLE `player` (
    `copper` int(11) default '0',
    `tin` int(11) default '1',
    `admin` int(11) default '0',
+   `name` set('1'),
+   `class_name` varchar(25),
+   `city` tinyint(3) unsigned,
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=9;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=10;
+
+INSERT INTO `player` (`id`, `username`, `password`, `email`, `class_id`, `total_hp`, `current_hp`, `total_mp`, `current_mp`, `str`, `tough`, `agi`, `luck`, `vit`, `mining`, `smithing`, `zone`, `loc_x`, `loc_y`, `level`, `current_exp`, `skill_points`, `gold`, `stone`, `last_battled`, `mining_exp`, `copper`, `tin`, `admin`, `name`, `class_name`, `city`) VALUES 
+('9', 'xangelo', '9d6f6dbca62962790cfca436a9c7c156436b2d46', 'xangelo@gmail.com', '4', '14', '14', '3', '3', '9', '3', '3', '3', '3', '1', '1', '1', '46', '53', '3', '29', '0', '1', '6', '2', '', '0', '1', '0', '', 'Barista', '2');

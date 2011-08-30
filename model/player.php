@@ -25,7 +25,7 @@ class Model_Player extends RedBean_SimpleModel {
 		
 		if($this->current_hp <= 0) {
 			$this->current_hp = $this->total_hp();
-			$this->city = 1;
+			$this->city = 2;
 			$this->loc_x = 50;
 			$this->loc_y = 50;
 		}
@@ -63,6 +63,8 @@ class Model_Player extends RedBean_SimpleModel {
 			
 		$class = R::findOne('class','id = ?',array($this->class_id));
 		
+		$this->class_name = $class->name;
+		
 		$this->skill_points = 1;
 			
 		$this->total_mp = $class->mp;
@@ -76,6 +78,10 @@ class Model_Player extends RedBean_SimpleModel {
 		$this->tough = $class->tough;
 		$this->agi = $class->agi;
 		$this->luck = $class->luck;
+		
+		$this->stone = 0;
+		$this->copper = 0;
+		$this->tin = 0;
 		
 		$this->level = 1;
 		

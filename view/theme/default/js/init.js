@@ -163,18 +163,12 @@ sandbox.register_module('fight-club', util.extend({
 			e.preventDefault();
 			e.stopPropagation();
 			
-			$('#fight-button').attr('disabled',true);
+			$('#fight-button').remove();
 			
 			$.ajax({
 				url: $(this).attr('action')
 				, dataType: 'json'
 				, type: 'post'
-				, data: {monster_id: $('#monster option:selected').val()}	
-				, complete: function() {
-					setTimeout(function(){
-						$('#fight-button').attr('disabled',false);
-					}, 2000);
-				}
 				, success: function(res) {
 					if(res !== 'f331d3ad') {
 						sandbox.request_module('fight-club').render(res);

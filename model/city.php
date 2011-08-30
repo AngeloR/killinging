@@ -22,14 +22,34 @@ class Model_City extends RedBean_SimpleModel {
 	}
 	
 	public function draw($center_x,$center_y,$size) {
-		$map = imagecreatefrompng('maps/'.$this->id.'.png');
+		$player = unserialize($_SESSION['player']);
+		$map = imagecreatefrompng('maps/zone1.png');
+		
+		$neg = $size * (-1);
+		$min_x = $center_x + $neg;
+		$min_y = $center_y + $neg;
+		$max_x = $center_x + $size;
+		$max_y = $center_y + $size;
 
+		// chance to find monster!
+		$rand = rand(0,1);
+		if($rand == 1) {
+			$monsters = R::find('monster','city = ? and level <= ? and min_x <= ? and min_y <= ? and max_x >= ? and max_y >= ?', array($this->id,$player->level,$player->loc_x,$player->loc_y,$player->loc_x,$player->loc_y));
+			if(!emptY($monsters)) {
+				$monster = $monsters[array_rand($monsters)];
+				unset($_SESSION['battle']);
+				$_SESSION['battle'] = serialize($monster);
+				if(!empty($monster)) {
+					set('monster',$monster);
+				}
+			}
+		}
 		
 		$land_types = array_keys($this->land);
 		
 		
-		for($y = ($size*-1); $y <= $size; ++$y) {
-			for($x = ($size*-1); $x <= $size; ++$x) {
+		for($y = $neg; $y <= $size; ++$y) {
+			for($x = $neg; $x <= $size; ++$x) {
 				$rgb = imagecolorat($map,$center_x + $x,$center_y + $y);
 				$tile = imagecolorsforindex($map, $rgb);
 				
@@ -39,7 +59,7 @@ class Model_City extends RedBean_SimpleModel {
 				
 				$key =	$r.','.$g.','.$b;
 				if(array_key_exists($key,$this->land)) {
-					echo '<img src="/tiles/'.$this->land[$key]['name'].'.png" width="60" height="60">';
+					echo '<img src="/killinging/tiles/'.$this->land[$key]['name'].'.png" width="60" height="60">';
 				}
 			}
 			echo '<br>';
@@ -47,7 +67,7 @@ class Model_City extends RedBean_SimpleModel {
 	}
 	
 	public function can_move_to($x,$y) {
-		$map = imagecreatefrompng('maps/'.$this->id.'.png');
+		$map = imagecreatefrompng('maps/zone1.png');
 		$rgb = imagecolorat($map,$x,$y);
 		$tile = imagecolorsforindex($map, $rgb);
 				

@@ -21,7 +21,7 @@
 			</tr>
 			<tr>
 				<td class="sidebar">
-					<h2><?php echo $player->username; ?>, level <span id="level"><?php echo $player->level; ?></span></h2>
+					<h2><?php echo $player->username; ?>, the level <span id="level"><?php echo $player->level.' '.$player->class_name; ?></span></h2>
 					<table width="100%" id="quick-stats">
 						<tr>
 							<th>HP: </th>
@@ -171,20 +171,20 @@
 							<tr>
 								<td id="fight-side">
 									<div id="fight">
-										<?php $place = $city->at($player->loc_x,$player->loc_y); 
-										if(!$place) : ?>
+										<?php $place = $city->at($player->loc_x,$player->loc_y); ?>
+										<?php if(!$place && !empty($players) && count($players) >= 1): ?>
+										<form action="<?php echo url_for('pvp'); ?>" method="post" id="pvp-form">
+											<p><select name="player_id">
+												<?php foreach($players as $p): ?>
+												<option value="<?php echo $p->id; ?>"><?php echo $p->username.' ('.$p->level.')'; ?></option>
+												<?php endforeach; ?>
+											</select>
+											<button type="submit" id="pvp-button">Attack</button></p>
+										</form>
+										<?php endif; ?>
+										<?php if(!$place && isset($monster)) : ?>
 											<form action="<?php echo url_for('fight');?>" method="post" id="fight-form">
-												<select name="monster" id="monster">
-													<?php foreach($monsters as $monster):?>
-														<?php if($monster->id == $player->last_battled): ?>
-														<option value="<?php echo $monster->id; ?>" selected="selected"><?php echo $monster->name; ?> (<?php echo $monster->level; ?>)</option>
-														<?php else: ?>
-														<option value="<?php echo $monster->id; ?>"><?php echo $monster->name; ?> (<?php echo $monster->level; ?>)</option>
-														<?php endif; ?>
-														
-													<?php endforeach; ?>
-												</select>
-												<button type="submit" id="fight-button">Fight</button>
+												<p>You were attacked by a <?php echo $monster->name; ?> (<?php echo $monster->level; ?>)! <button type="submit" id="fight-button">Fight</button></p>
 											</form>
 											<div id="fight_notification"></div>
 										<?php else: ?>
@@ -220,13 +220,6 @@
 							<p>This land has already been claimed. You can only claim land that is far enough away from buildings you don't own.</p>
 						<?php endif; ?>
 					</div>
-				</td>
-			</tr>
-			
-			
-			<tr>
-				<td id="footer" colspan="3">
-					I made this &copy;
 				</td>
 			</tr>
 		</table>

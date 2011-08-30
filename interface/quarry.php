@@ -31,7 +31,7 @@ class QuarryInterface implements BuildingInterface{
 	}
 	
 	public function display() {
-		echo '<img src="/tiles/quarry.png" width="32" height="32" class="building">';
+		echo '<img src="/killinging/tiles/quarry.png" width="32" height="32" class="building">';
 	}
 	
 	public function render() {

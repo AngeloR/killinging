@@ -80,7 +80,8 @@ h2 {
 	border: solid 0 #000;
 }
 #quick-stats td, #quick-stats th{
-	padding: 4px;
+	padding: 2px 4px;
+	font-size: 0.9em;
 }
 th {
 	font-weight: bold;
@@ -224,19 +225,6 @@ table.stats th {
 .gritter-with-image {
 	width:220px;
 	float:right;
-}
-
-
-/** GAME MESSAGES **/
-#gamemessages {
-	position: absolute;
-	bottom: 10px;
-	right: 10px;
-}
-#gamemessages li {
-	background-color: rgba(0,0,0,0.6);
-	padding: 5px;
-	width: 200px;
 }
 
 /** MAP **/
