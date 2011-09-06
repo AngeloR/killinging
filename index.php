@@ -169,9 +169,6 @@ function game() {
 	}
 	set('city',$city);
 	
-	$monsters = R::find('monster','1 order by level asc, name asc');
-	set('monsters',$monsters);
-	
 	$buildings = R::find('building_type','1 order by cost asc');
 	set('buildings',$buildings);
 	
