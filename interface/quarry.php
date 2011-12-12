@@ -31,7 +31,7 @@ class QuarryInterface implements BuildingInterface{
 	}
 	
 	public function display() {
-		echo '<img src="/killinging/tiles/quarry.png" width="32" height="32" class="building">';
+		echo '<img src="/tiles/quarry.png" width="32" height="32" class="building">';
 	}
 	
 	public function render() {
@@ -57,8 +57,9 @@ class QuarryInterface implements BuildingInterface{
 			
 			<select name="length" id="length">
 				<option value="1" selected="selected">Once</option>
-				<option value="10">10 Times</option>
 				<option value="25">25 Times</option>
+				<option value="50">50 Times</option>
+				<option value="100">100 Times</option>
 			</select>
 			
 			<button type="submit" id="mine-button">Start Mining!</button>
