@@ -36,12 +36,23 @@ footer, header, hgroup, menu, nav, section {
 body {
 	line-height: 1;
 	font-size: 0.833em;
+	background-color: #444;
+	color: #dedede;
+}
+a {
+	color: #fff;
 }
 ol, ul {
 	list-style: none;
 }
 blockquote, q {
 	quotes: none;
+}
+b {
+	font-weight: bold;
+}
+i {
+	font-style: italic;
 }
 blockquote:before, blockquote:after,
 q:before, q:after {
@@ -57,6 +68,9 @@ table {
 	width: 960px;
 	margin: 0 auto;
 }
+h1,h2,h3,h4,h5,h6 {
+	font-weight: bold;
+}
 h1 {
 	font-family: 'UnifrakturCook', cursive;
 	font-size: 6em;
@@ -67,6 +81,15 @@ h2 {
 	font-size: 1.2em;
 	margin-bottom: 5px;
 }
+h3 {
+	text-align: center;
+	padding: 6px;
+	background-color: #888;
+}
+h4 {
+	font-size: 14px;
+	margin-bottom: 6px;
+}
 #tagline {
 	font-size: 0.3em;
 	font-family: 'Droid Sans', sans-serif;
@@ -76,21 +99,22 @@ h2 {
 	top: 10px;
 	right: 10px;
 }
-.thegame td {
-	border: solid 0 #000;
-}
 #quick-stats td, #quick-stats th{
-	padding: 2px 4px;
+	padding: 2px 6px 2px 4px;
 	font-size: 0.9em;
 }
-th {
+#quick-stats th {
 	font-weight: bold;
+	text-align: right;
+	width: 50px;
 }
 .sidebar {
 	width: 25%;
+	vertical-align: top;
 }
 #content, #stats {
 	border-width: 0 1px;
+	width: 100%;
 }
 #content {
 	max-height: 500px;
@@ -98,10 +122,10 @@ th {
 	height: 500px;
 }
 #footer {
-	font-size: 0.75em;
 	text-align: center;
 	padding: 5px;
 	border-width: 1px 0 0;
+	color :#aaa;
 }
 .help {
 	font-size: 0.75em;
@@ -113,10 +137,78 @@ table.stats th {
 	text-align: right;
 	font-weight: bold;
 }
+.clear {
+	clear: both;
+}
+p {
+	margin: 0.8em 0;
+}
+button {
+	border: solid 1px #ddd;
+}
+button:hover {
+	cursor: pointer;
+}
+
+/** STATS TAB **/
+.stats-tab {
+	width: 100%;
+}
+.stats-tab td {
+	width: 50%;
+	white-space: nowrap;
+}
+
+/** PROGRESS BAR **/
+.progressbar {
+  width: 100%;
+  border: 1px solid;
+  padding: 3px 0;
+	font-size: 0.9em;
+  position: relative;
+}
+.progressbar .percent {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.progressbar .text {
+	display: block;
+	text-align: center;
+	position: relative;
+	text-shadow: 0 0 1px rgba(0,0,0,0.3);
+}
+.health.progressbar {
+  border-color: #a00;
+  color: #a00;
+}
+.health.progressbar .percent {
+  background-color: #faa;
+}
+.exp.progressbar {
+  border-color: #050;
+  color: #0a0;
+}
+.exp.progressbar .percent {
+  background-color: #afa;
+}
+.mp.progressbar {
+  border-color: #00a;
+  color: #00a;
+}
+.mp.progressbar .percent {
+  background-color: #59f;
+}
+
 
 /** CHAT **/
 #message {
 	width: 185px;
+	border: solid 1px #000;
+	background-color: #666;
 }
 .message {
 	font-size: 0.9em;
@@ -124,16 +216,21 @@ table.stats th {
 #chat-messages {
 	height: 380px;
 	overflow: auto;
+	padding-right: 10px;
 }
 .message > .from {
 	font-weight: bold;
 	cursor: pointer;
 }
 .message.admin {
-	color: #0000aa;
+	color: #A5EBFF;
+}
+.message.server {
+	font-weight: bold;
+	color: #09f;
 }
 .message.pm {
-	color: #a0a;
+	color: #f5f;
 }
 
 /** GRITTER **/
@@ -228,6 +325,10 @@ table.stats th {
 }
 
 /** MAP **/
+#gameframe {
+	overflow: hidden;
+	display: none;
+}
 #location {
 	font-size: 0.833em;
 	display: inline;
@@ -280,33 +381,100 @@ table.stats th {
 
 /** FIGHTS **/
 #fight-side {
-	padding: 10px;
+	padding: 10px 0 10px 10px;
+	font-size: 12px;
 }
+.they-attacked, .you-attacked, .missed {
+	font-weight: bold;
+}
+.they-attacked {
+	color: #700;
+}
+.you-attacked{
+	color: #00a;
+}
+.missed {
+	color: #0aa;
+}
+#fight_notification {
+	text-align: left;
+	margin-top: 20px;
+	font-size: 0.9em;
+	height: 280px;
+	overflow: auto;
+}
+.fight-messages li {
+	margin-bottom: 2px;
+}
+#fight_notification .notification {
+	font-weight: bold;
+	color: #0a0;
+	margin-top: 10px;
+}
+#earnings {
+	color: #282828;
+}
+#earnings td {
+	padding-right: 5px;
+	color: #aaa;
+}
+
+
+.success {
+	color: #0a0;
+}
+.error {
+	color: #a00;
+}
+
 
 /** MENU **/
 #menu {
 	width: 100%;
+	border: solid 0 #333;
+	border-bottom-width: 1px;
+	border-style: inset;
+	position: relative;
 }
 #menu li {
 	display: inline-block;
-	border: solid 0 #666;
-	border-width: 0 0 1px 0;
+	border: solid 0 #333;
+	top: 1px;
+	height: 25px;
+	overflow: visible;
 }
 #menu .active {
 	font-weight: bold;
-	border-width: 1px 1px 0;
+	border-bottom-color: #666;
+	border-width: 1px;
+	background: #9b9b9b; /* Old browsers */
+	background: -moz-linear-gradient(top, #9b9b9b 1%, #666666 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(1%,#9b9b9b), color-stop(100%,#666666)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #9b9b9b 1%,#666666 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #9b9b9b 1%,#666666 100%); /* Opera11.10+ */
+	background: -ms-linear-gradient(top, #9b9b9b 1%,#666666 100%); /* IE10+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#9b9b9b', endColorstr='#666666',GradientType=0 ); /* IE6-9 */
+	background: linear-gradient(top, #9b9b9b 1%,#666666 100%); /* W3C */
 }
 #menu a {
 	display: inline-block;
 	padding: 5px 12px;
-	font-weight: normal;
+	font-weight: bold;
+	color: yellow;
+	text-decoration: none;
+	height: 26px;
 }
+
+
 
 /** MODAL **/
 #simplemodal-data {
 	border: solid 1px #000;
 	background-color: #eee;
 	cursor: default;
+	color: #444;
+	display: block;
+	height: 400px;
 }
 #simplemodal-container .title {
 	background-color: #333;
@@ -346,8 +514,9 @@ a.modalCloseImg {
 .building {
 	position: absolute;
 	z-index: 3;
+
 }
-.building,#player {
+#player {
 	top: 15px;
 	left: 15px;
 }
@@ -394,9 +563,55 @@ a.modalCloseImg {
 	right: 0;
 }
 
-
+/** CRAFTING WINDOW **/
+#crafting-window {
+	width: 100%;
+}
+.craft-item {
+	display: block;
+	text-align: right;
+	text-decoration: none;
+	width: 150px;
+}
+#crafting-log, #crafting-resources {
+	height: 120px;
+	overflow: auto;
+	padding: 5px;
+}
+#crafting-log li {
+	padding: 0 0 3px 0;
+}
+.craft-item:hover{
+	text-decoration: underline;
+}
+#crafting-resources th{
+	text-align: left;
+	width: 90px;
+}
 
 /** FIXES **/
 .alignleft {
 	text-align: left !important;
+}
+.item-icon {
+	vertical-align: top;
+	width: 16px;
+	height: 16px;
+}
+.datagrid {
+	width: 100%;
+	margin: 25px 0;
+}
+.datagrid td, .datagrid th {
+	padding: 8px;
+	border: solid 0px #333;
+	border-bottom-width: 1px;
+}
+.datagrid th {
+	font-weight: bold;
+	font-size: 1.2em;
+	text-align: left;
+}
+.datagrid tr:hover {
+	background-color: #666;
 }

@@ -7,12 +7,23 @@ sandbox.register_module('monster', util.extend({
       , agi = parseInt($('#agi').val())
       , vit = parseInt($('#vit').val())
       , tough = parseInt($('#tough').val()) 
-      , damage = Math.round(str*str*(agi/2))
-      , defence = Math.round(tough*vit*(tough/2))
+      , damage = function() {
+
+    		var $damage = Math.floor($('#str').val()/3)
+    			, $runs = Math.floor($('#str').val()/6);
+
+    		if($runs == 0) {
+    			return str + ' + 0d6';
+    		}
+			return $damage + ' + '+ $runs+'d6';
+	    }
+      , defence = function() {
+    	  return tough + Math.floor(tough*0.3);
+      }
       , current_hp = Math.round(vit*tough + vit*(tough/2));
       
 
-    $('#damage').html(damage);
+    $('#damage').html(damage());
     $('#defence').html(defence);
     $('#current_hp').val(current_hp);
   }
@@ -40,6 +51,13 @@ sandbox.register_module('monster', util.extend({
       if(confirm) {
         $('#method').val('delete');
       }
+    });
+    
+    $('#city').change(function(e){
+    	var $obj = $('#city option:selected');
+    	
+    	$('#min_bounds').val($obj.attr('data-min'));
+    	$('#max_bounds').val($obj.attr('data-max'));
     });
   }
 }, sandbox.module));

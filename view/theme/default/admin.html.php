@@ -15,10 +15,10 @@
             	<ul>
                 	<li<?php echo (strpos(request_uri(),'/admin')==0 && request_uri() == '/admin')?' class="current"':''; ?>><a href="<?php echo url_for('admin'); ?>">Dashboard</a></li>
                     <li<?php echo (strpos(request_uri(),'/monsters')==6)?' class="current"':''; ?>><a href="<?php echo url_for('admin','monsters'); ?>">Monsters</a></li>
-                    <li><a href="#">Users</a></li>
+                    <li<?php echo (strpos(request_uri(),'/users')==6)?' class="current"':''; ?>><a href="<?php echo url_for('admin','users'); ?>">Users</a></li>
                     <li><a href="#">Items</a></li>
                     <li><a href="#">Buildings</a></li>
-                    <li><a href="#">Statistics</a></li>
+                    <li<?php echo (strpos(request_uri(),'/reports')==6)?' class="current"':''; ?>><a href="<?php echo url_for('admin','reports'); ?>">Reports</a></li>
               </ul>
           </div>
       </div>
