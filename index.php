@@ -1,4 +1,4 @@
-<?php 
+<?php session_start();
 
 date_default_timezone_set('America/Toronto');
 
@@ -10,13 +10,18 @@ include('class/ChatManager.php');
 
 include('interface/building.php');
 include('interface/store.php');
+include('interface/crafting.php');
 include('interface/quarry.php');
+include('interface/bank.php');
+include('interface/tavern.php');
 
 
 include('model/player.php');
+include('model/monster.php');
 include('model/city.php');
 include('model/building.php');
 include('model/item.php');
+include('model/item_all.php');
 include('model/owned.php');
 include('model/message.php');
 
@@ -67,18 +72,27 @@ dispatch_post('/login','login');
 dispatch_post('/signup','signup');
 dispatch_get('/logout','logout');
 
-dispatch_get('/game','game');
+dispatch_get('/game','gameframe');
+dispatch_get('/gameframe','game');
 
 
 dispatch_get('/move/:dir','movement_handler');
 dispatch_post('/fight','fight_handler');
 dispatch_post('/pvp','pvp_handler');
-dispatch_get('/item/info/:id','get_item_info');
+dispatch_post('/item/info/:id','get_item_info');
+
+dispatch_get('/building/info/:id','get_building_info');
+dispatch_post('/building','build');
+dispatch_post('/bank/:id/deposit','deposit');
+dispatch_post('/bank/:id/withdraw','withdraw');
+dispatch_post('/tavern/:id','heal');
 
 dispatch_get('/inventory/info/:id','get_inventory_info');
-dispatch_get('/building/info/:id','get_building_info');
 dispatch_post('/inventory/:id','buy_item');
 dispatch_get('/inventory','get_inventory');
+
+dispatch_get('/craft/:id', 'craft_item');
+
 dispatch_post('/skill/:type','skillup');
 
 dispatch_post('/store/add','add_item_to_store');
@@ -89,7 +103,33 @@ dispatch_post('/upgrade/:building_id','upgrade_building');
 dispatch_get('/chat/:since','get_chat_messages');
 dispatch_post('/chat','post_chat_message');
 
-include('admin.php');
+
+// dont clutter the routes.
+if(array_key_exists('player',$_SESSION)) {
+	$player = unserialize($_SESSION['player']); 
+	if($player->admin > 0) {
+		include('admin.php');
+	}
+} 
+
+function round_to_nearest( $number, $toNearest = 5 ) {
+
+	$retval = 0;
+
+	$mod = $number % $toNearest;
+
+	if( $mod >= 0 ) {
+		$retval = ( $mod > ( $toNearest / 2 )) ? $number + ( $toNearest - $mod )
+		: $number - $mod;
+
+	} else {
+		$retval = ( $mod > ( -$toNearest / 2 )) ? $number - $mod : $number +
+		( -$toNearest - $mod );
+
+	}
+	return $retval;
+
+}
 
 function homepage() {
 	$classes = R::find('class','preform = 0 order by name asc');
@@ -120,6 +160,9 @@ function login() {
 	if(!empty($player)) {
 		$_SESSION['player'] = serialize($player);
 		$_SESSION['flash'] = array();
+		
+		post_to_chat($player->username.' has logged in.');
+		
 		redirect_to('game');
 	}
 	else {
@@ -159,10 +202,30 @@ function signup() {
 	return homepage();
 }
 
+/**
+*
+* This is what renders the main game section. All the tabs and the map section
+* are generated here and then populated outside this frame via JS.
+*/
+function gameframe() {	
+	$player = unserialize($_SESSION['player']);
+	set('player',$player);
+	
+	return render('game.html.php');
+}
+
 
 function game() {
 	$player = unserialize($_SESSION['player']);
 	
+	// Get all player items
+	$helm = R::getAll('select id,name from helm where owner = ? order by id asc',array($player->id)); 
+	$weapon = R::find('weapon','owner = ? order by id asc',array($player->id));
+
+	set('helms',$helm);
+	set('weapons',$weapon);
+	
+	// Get the city where the player is.
 	$city = R::findOne('city','zone = ? and min_x <= ? and min_y <= ? and max_x >= ? and max_x >= ?',array($player->zone,$player->loc_x,$player->loc_y,$player->loc_x,$player->loc_y));
 	if(empty($city)) {
 		$city = R::findOne('city','id = 1');
@@ -175,8 +238,9 @@ function game() {
 	set('gamemessages',$_SESSION['flash']);
 	$_SESSION['flash'] = array();
 	
+	set('player',unserialize($_SESSION['player']));
 	
-	return render('game.html.php');
+	return partial('tabs.html.php');
 }
 
 
@@ -250,8 +314,24 @@ function movement_handler($dir) {
 		$stoneBound = $player->luck + rand($player->mining,$player->mining+100) + rand(0,100); 
 		if($rand <= $stoneBound) {
 			$player->stone++;
+			$_SESSION['flash'][] = 'You found 1 stone.';
 		}
-
+		
+		
+		// Check to see if the player should gain any HP. This is lucked based.
+		$chance = $player->luck; 
+		$rand = rand(0,1000); 
+		if($rand <= $chance) {
+			$gain = round($player->luck/100);
+			if($gain == 0) {
+				$gain = 1;
+			}
+			
+			if($player->current_hp+$gain <= $player->total_hp()) {
+				$player->current_hp += $gain;
+				$_SESSION['flash'][] = 'You feel a little more rested.. you\'ve gained '.$gain.' hp.';
+			}
+		}
 		R::store($player);
 		$_SESSION['player'] = serialize($player);
 		
@@ -260,19 +340,41 @@ function movement_handler($dir) {
 	$players = R::find('player','city = ? and loc_x = ? and loc_y = ? and player_id != ?',array($player->city,$player->loc_x,$player->loc_y,$player->id));
 	set('players',$players);
 	
+	find_monster($city->id);
+	
 	return game();
 }
 
-function fight_club_calc_damage($attacker,$defender) {
-	$damage = round($attacker->str * $attacker->str* ($attacker->agi/2));
+function find_monster($id) {
+	$player = unserialize($_SESSION['player']);
+	// chance to find monster. Current its' a 50% chance to find a monster and then 
+	// each monster has equal chance of showing up, but eventually each monster 
+	// will have its own chance of appearing, allowing for rare Boss monsters.
+	$rand = rand(0,1);
+	if($rand == 1) {
+		$monsters = R::find('monster','city = ? and level <= ? and min_x <= ? and min_y <= ? and max_x >= ? and max_y >= ?', array($id,$player->level,$player->loc_x,$player->loc_y,$player->loc_x,$player->loc_y));
+		if(!empty($monsters)) {
+			$monster = $monsters[array_rand($monsters)];
+			unset($_SESSION['battle']);
 	
-	$defence = $defender->tough*+$defender->vit*($defender->tough/2);
+			if(!empty($monster)) {
+				$_SESSION['battle'] = serialize($monster);
+				set('monster',$monster);
+			}
+		}
+	}
+}
+
+function fight_club_calc_damage($attacker,$defender) {
+	$damage = $attacker->damage();
+	
+	$defence = $defender->defence();
 	
 	// crits!
-	$crit_rate = rand(0,$attacker->luck);
+	$crit_rate = rand(0,$attacker->luck*100 - $attacker->luck);
 	$crit = false;
-	if($crit_rate <= ($attacker->luck*0.1)) {
-		$damage *= 0.75;
+	if($crit_rate <= $attacker->luck) {
+		$damage += $attacker->str/2;
 		$crit = true;
 	}
 	
@@ -286,6 +388,9 @@ function fight_club_calc_damage($attacker,$defender) {
 }
 
 function fight_club($p1,$p2) {
+	// MAX ROUNDS
+	$MAX_ROUNDS = 15;
+	
 	if($p1->agi > $p2->agi) {
 		$first = $p1;
 		$second = $p2;
@@ -298,36 +403,54 @@ function fight_club($p1,$p2) {
 	$rounds = 0;
 	$messages = array();
 	while($first->current_hp > 0 && $second->current_hp > 0) {
-		++$rounds;
-		$damage = fight_club_calc_damage($first,$second);
-		$second->current_hp -= $damage[0];
-		
-		if(isset($first->name) && !empty($first->name)) {
-			$messages[] = 'The '.$first->name.' '.(($damage[0]==0)?'missed':'attacked '.$second->username.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
+		if($rounds < $MAX_ROUNDS) { 
+			++$rounds;
+			$damage = fight_club_calc_damage($first,$second);
+			$second->current_hp -= $damage[0];
+			
+			if(isset($first->name)) {
+				$messages[] = 'The '.$first->name.' '.(($damage[0]==0)?'<span class="missed">missed</span>':'attacked you'. (($damage[1])?' <i>critically</i>':'') .' for <span class="they-attacked">'.$damage[0].' damage.</span>');
+			}
+			else {
+				$messages[] = 'You '. (($damage[0]==0)?'<span class="missed">missed</span>':'attacked the '.$second->name. (($damage[1])?' <i>critically</i>':'') .' for <span class="you-attacked">'.$damage[0].' damage.</span>');
+			}
+			
+			if($second->current_hp <= 0) {
+				break;
+			}
+			
+			$damage = fight_club_calc_damage($second,$first);
+			$first->current_hp -= $damage[0];
+			
+			if(isset($second->name)) {
+				$messages[] = 'The '.$second->name.' '.(($damage[0]==0)?'<span class="missed">missed</span>':'attacked you'. (($damage[1])?' <i>critically</i>':'') .' for <span class="they-attacked">'.$damage[0].' damage.</span>');
+			}
+			else {
+				$messages[] = 'You '. (($damage[0]==0)?'<span class="missed">missed</span>':'attacked the '.$first->name. (($damage[1])?' <i>critically</i>':'') .' for <span class="you-attacked">'.$damage[0].' damage.</span>');
+			}
 		}
 		else {
-			$messages[] = 'You '. (($damage[0]==0)?'missed':'attacked the '.$first->name.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
-		}
-		
-		if($second->current_hp <= 0) {
-			continue;
-		}
-		
-		$damage = fight_club_calc_damage($second,$first);
-		$first->current_hp -= $damage[0];
-		
-		if(isset($second->name)) {
-			$messages[] = 'The '.$second->name.' '.(($damage[0]==0)?'missed':'attacked '.$first->username.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
-		}
-		else {
-			$messages[] = 'You '. (($damage[0]==0)?'missed':'attacked the '.$second->name.' '. (($damage[1])?'critically':'') .' for '.$damage[0].' damage.');
+			break;
 		}
 	}
-	
+	// return format
+	// winner,loser,rounds,messages
 	if($first->current_hp <= 0) {
-		return array($second,$rounds,$messages);
+		return array($second,$first,$rounds,$messages);
 	}
-	return array($first,$rounds,$messages);
+	else if($second->current_hp <= 0) {
+		return array($first,$second,$rounds,$messages);
+	}
+	else {
+		// max round length was reached
+		$messages[] = 'The monster escaped! Maybe you should get a bit stronger before trying this one...';
+		if(isset($first->name)) {
+			return array($second,$first,$rounds,$messages);
+		}
+		else {
+			return array($first,$second,$rounds,$messages);
+		}
+	}
 }
 
 function fight_handler() {
@@ -341,24 +464,30 @@ function fight_handler() {
 	 		$player->last_battled = $monster->id;
 	 		
 	 		if($player->current_hp > 0) {
-	 			list($winner,$rounds,$messages) = fight_club($player,$monster);
+	 			list($winner,$loser,$rounds,$messages) = fight_club($player,$monster);
 
 	 			if(isset($winner->username)) {
 	 				// player won
-	 				$player->current_hp = $winner->current_hp;
-	 				$player->gold += $monster->gold;
-	 				$player->current_exp += $monster->exp;
-					R::store($player);
-					$_SESSION['player'] = serialize($player);
+	 				if($loser->current_hp <= 0) {
+	 					$player->current_hp = $winner->current_hp;
+	 					$player->gold += $monster->gold;
+	 					$player->current_exp += $monster->exp;
+	 					$tie = false;
+	 				}
+	 				else {
+	 					$player->current_hp = $winner->current_hp;
+	 					$tie = true;
+	 				}
 	 			}
 	 			else {
 	 				$player->gold = 0;
-					R::store($player);
-					$_SESSION['player'] = serialize($player);
-					$_SESSION['flash'][] = 'Whoops, the '.$monster->name.' killed you! You have been sent to '.$player->loc_x.','.$player->loc_y;
+	 				
+	 				R::store($player);
+	 				$_SESSION['player'] = serialize($player);
+	 				
+					$_SESSION['flash'][] = 'Whoops, the '.$monster->name.' killed you! You have been sent to your milestone.';
 					return json('f331d3ad');
 	 			}
-	 			
 	 			
 	 		}
 	 		else {
@@ -368,10 +497,14 @@ function fight_handler() {
 	 		}
 	 }
 	 
+	 R::store($player);
+	 $_SESSION['player'] = serialize($player);
+	 
 	 return json(array(
 	   'messages' => $messages,
 	 	 'rounds' => $rounds,
 	 	 'monster' => $monster->name,
+	 	 'tie' => (bool)$tie,
 	 	 'stats' => array(
 	 	 		'current_hp' => (int)$player->current_hp,
 	 	 		'total_hp' => (int)$player->total_hp,
@@ -379,7 +512,7 @@ function fight_handler() {
 	 	 		'total_mp' => (int)$player->total_mp,
 	 	 		'current_exp' => (int)$player->current_exp,
 	 	 		'total_exp' => (int)$player->exp_to_level(),
-	 	 		'gold' => (int)$player->gold,
+	 	 		'gold' => (int)$monster->gold,
 	 	 		'level' => (int)$player->level
 	 	 )
 	 ));
@@ -419,13 +552,175 @@ function pvp_handler() {
 }
 //*/
 function get_item_info($id) {
-	$item = R::findOne('item','id = ?',array($id));
+	$item = R::findOne($_POST['type'],'id = ?',array($id));
 	return json($item->tojson());
 }
 
 function get_building_info($id) {
 	$building = R::findOne('building_type','id = ?',array($id));
 	return json($building->tojson());
+}
+
+function build() {
+	$player = unserialize($_SESSION['player']);
+	$building = R::findOne('building_type','id = ?',array($_POST['build']));
+	
+	// make sure that building type exists
+	if(!empty($building)) {
+		
+		// make sure the player has enough resources
+		if($player->gold >= $building->cost && $player->stone >= $building->stone) {
+			// remove those resources from the player inventory
+			$player->gold -= $building->cost;
+			$player->stone -= $building->stone; 
+			
+			// add the building to the buildings list
+			$building_set = R::dispense('building');
+			
+			$building_set->building_type = $building->id;
+			$building_set->cost = $building->cost;
+			$building_set->stone = $building->stone;
+			$building_set->map_id = $player->city;
+			$building_set->loc_x = $player->loc_x;
+			$building_set->loc_y = $player->loc_y; 
+			$building_set->level = 1;
+			$building_set->owner = $player->id;
+			$building_set->owner_type = 'player';
+			$building_set->name = ucfirst($building->name).' by '.$player->username;
+			
+			// Banks are special. A "Tax Rate" is added for them
+			if($building->id == 5) {
+				$building_set->tax = 1.5;
+			}
+			
+			R::store($building_set);
+			R::store($player);
+			$_SESSION['player'] = serialize($player);
+			
+			
+			
+			
+			// notify users that there is a building on the map
+			post_to_chat($player->username.' just built a '.$building->name.' at '.$player->loc_x.','.$player->loc_y);
+			$array = array('status' => 'success', 'data' => array('gold' => $player->gold, 'stone' => $player->stone));
+		}
+		else {
+			// notify the user they didn't have enough resources
+			$array = array('status' => 'failed', 'data' => 'You don\'t have enough resources to build a '.$building->name);
+		}
+	}
+	else {
+		$array = array('status' => 'failed', 'data' => 'You need to select a building that you want to build on this land.');
+	}
+	
+	return json($array);
+}
+
+function deposit($bank_id) {
+	$player = unserialize($_SESSION['player']);
+	
+	if($player->gold >= $_POST['gold'] || $_POST['gold'] < 0) {
+		// player has enough gold		
+		$transaction = R::findOne('transaction','player = ? and bank_id = ?', array($player->id,$bank_id));
+	
+	
+		if(empty($transaction)) {
+			// a transaction doesnt exist. First time using this bank.
+			$transaction = R::dispense('transaction');
+			$transaction->player = $player->id;
+			$transaction->gold = 0;
+			$transaction->bank_id = $bank_id;
+		}
+		
+		if($_POST['gold'] < 0) {
+			$_POST['gold'] = $player->gold;
+		}
+		$transaction->gold += $_POST['gold'];
+		
+		$player->gold -= $_POST['gold'];
+		
+		R::store($transaction);
+		R::store($player);
+		
+		$_SESSION['player'] = serialize($player);
+		
+		$array = array('status' => 'success', 'data' => array('player' => number_format($player->gold,0), 'bank' => number_format($transaction->gold,0)));
+	}
+	else {
+		// trying to deposit more than they have
+		$array = array('status' => 'failed', 'data' => 'You can\'t deposit that much money.');
+	}
+	
+	return json($array);
+}
+
+function withdraw($bank_id) {
+	$player = unserialize($_SESSION['player']);
+	
+	$transaction = R::findOne('transaction','player = ? and bank_id = ?',array($player->id,$bank_id));
+	// check if the player has any gold stored in the bank
+	if(!empty($transaction)) {
+		// check if the player has enough gold stored in the bank
+		if($transaction->gold >= $_POST['gold']) {
+			// withdraw the gold
+			if($_POST['gold'] < 0) {
+				$_POST['gold'] = $transaction->gold;
+			}
+			$transaction->gold -= $_POST['gold'];
+			$player->gold += $_POST['gold'];
+			
+			// remove the transaction if there is no more gold left | update if there is
+			if($transaction->gold == 0) {
+				R::trash($transaction);
+			}
+			else {
+				R::store($transaction);
+			}
+			
+			R::store($player);
+			$_SESSION['player'] = serialize($player);
+			
+			$array = array('status' => 'success', 'data' => array('player'=>number_format($player->gold,0), 'bank' => number_format($transaction->gold,0)));
+		}
+		else {
+			$array = array('status' => 'failed', 'data' => 'You don\'t have enough gold in your bank.');
+		}
+
+	}
+	else {
+		$array = array('status' => 'failed', 'data' => 'You don\'t have any gold in this bank.');
+	}
+	
+	return json($array);
+}
+
+function heal($id) {
+	$player = unserialize($_SESSION['player']);
+	$tavern = R::findOne('building','id = ? and loc_x = ? and loc_y = ?',array($id,$player->loc_x,$player->loc_y)); 
+	
+	if(!empty($tavern)) {
+		$tavern_interface = new TavernInterface($tavern);
+		$cost = $tavern_interface->cost_to_heal_player($player);
+		
+		if($player->gold >= $cost) {
+			$player->gold -= $cost;
+			$player->current_hp = $player->total_hp();
+			
+			R::store($player);
+			$_SESSION['player'] = serialize($player);
+			
+			$array = array('status' => 'success', 'data' => array('gold' => number_format($player->gold,0)));
+
+		}
+		else {
+			$array = array('status'=>'failed', 'data' => 'You don\'t have enough money to stay at a tavern.');
+		}
+	}
+	else {
+		$array = array('status' => 'failed', 'data' =>'There is no tavern at that location.');
+	}
+	
+	return json($array);
 }
 
 function buy_item() {
@@ -477,6 +772,166 @@ function get_inventory_info($id) {
 	return json($item->tojson());
 }
 
+function craft_item($recipe_id) {
+	$recipe = R::findOne('crafting_recipe','id = ?',array($recipe_id));
+	
+	if(!empty($recipe)) {
+		$player = unserialize($_SESSION['player']);
+		// Loop through all the costs and subtract them from the player.
+		$costs = array('copper','tin','bar_bronze','iron','bar_cast_iron');
+		
+		foreach($costs as $i => $cost) {
+			if(($player->$cost - $recipe->$cost) < 0) {
+				$array = array((bool)false,'Not enough resources.');
+				return json($array);
+			}
+			else {
+				$player->$cost = $player->$cost - $recipe->$cost;
+			}
+		}
+		
+		
+		
+		if(strpos($recipe->type,'bar_') === 0) {
+			$i = $recipe->type;
+			if(!isset($player->$i)) {
+				$player->$i = 0;
+			}
+			$player->$i = (int)$player->$i+1; 
+
+
+			R::store($player);
+			$_SESSION['player'] = serialize($player);
+			
+			$returns = array(
+				(bool)true,
+				'recipe' => array('name' => $recipe->name, 'icon' => $recipe->icon),
+				'resources'=> array(
+					'copper' => $player->copper,
+					'tin' => $player->tin,
+					'bronze' => $player->bar_bronze,
+					'iron' => $player->iron,
+					'cast_iron' => $player->bar_cast_iron
+				)
+			);
+			
+			return json($returns);
+		}
+		else {
+			// We are crafting a weapon/armor/accessory
+			// Craft item
+			$item = R::dispense($recipe->type);
+
+			// Set item stats
+			// Are we generating a terrible, below-average,average,above-average, awesome or godly item?
+			$type = rand(1,100);
+			$stats =  array('str','tough','agi','luck','vit');
+			
+			// Mod types are added here in the following format
+			// array(array(list,of,prefixes),modifier, how many stats to modify)
+			$mod_type = array(
+				array(array('Awful'), 0.5,5),
+				array(array('Inferior'), 0.75,3),
+				array(array('Regular','Formidable','Excellent'),1,0),
+				array(array('Magnificent'), 1.5,3),
+				array(array('Superior','Superb'),1.5,5),
+				array(array('Radiant'),2.5,5)
+			);
+			
+			if($type < 5) {
+				$modification_type = 0;
+			}
+			else if($type < 20) { 
+				$modification_type = 1;
+			}
+			else if($type < 85) {
+				$modification_type = 2;
+			}
+			else if($type < 97) {
+				$modification_type = 3;
+			}
+			else if($type < 99) {
+				$modification_type = 4;
+			}
+			else {
+				$modification_type = 5;
+			}
+			
+			$modified = 0;
+			$cost_base = 0;
+			foreach($stats as $i => $stat) {
+				if($modification_type != 2) {
+					// Grand Modifications only apply to non-regular crafted items
+					$grand_mod = rand(0,1);
+				}
+				
+				if(isset($grand_mod) && $grand_mod && $mod_type[$modification_type][2] > $modified) {
+					
+					// If we should modify a stat, we check if the stat is positively or negatively modified. 
+					
+					if($modification_type > 2) {
+						// if it is positively modified we check to see if the stat is 0, if it is, we add 1 and
+						// then calculate
+						if($recipe->$stat == 0) {
+							$offset = 1;
+						}
+					}
+					
+					else if($modification_type <= 1) {
+						if($recipe->$stat == 0) {
+							$offset = -1;
+						}
+					}
+					else {
+						$offset = $recipe->$stat;
+					}
+					
+					
+					$item->$stat = floor($mod_type[$modification_type][1]*$offset);
+
+					$modified++;
+					$cost_base += $item->$stat;
+				}
+				else {
+					$item->$stat = $recipe->$stat;
+					$cost_base += $item->$stat;
+				}
+			}
+			
+			$name = rand(0,count($mod_type[$modification_type][0]) - 1);
+				
+			$item->name = $mod_type[$modification_type][0][$name].' '.$recipe->name;
+			$item->owner = $player->id;
+			$item->cost = $cost_base*7;
+			$item->icon = $recipe->icon;
+			$item->level = floor($recipe->level*$mod_type[$modification_type][1]);
+			$player->crafting_exp += $recipe->exp;
+				
+			R::store($player);
+			$_SESSION['player'] = serialize($player);
+			R::store($item);
+			
+			$return = array(
+				(bool)true,
+				'recipe' => $item->tojson(),
+				'type' => $recipe->type,
+				'resources'=> array(
+									'copper' => $player->copper,
+									'tin' => $player->tin,
+									'bronze' => $player->bar_bronze,
+									'iron' => $player->iron,
+									'cast_iron' => $player->bar_cast_iron
+				)
+			);
+			
+			return json($return);
+		}
+	}
+	else {
+		return json(array((bool)false, 'That crafting recipe is now known to you yet.'));
+	}
+}
+
 function add_item_to_store() {
 	$player = unserialize($_SESSION['player']);
 	if(array_key_exists('id',$_POST) && array_key_exists('price',$_POST)) {
@@ -526,13 +981,11 @@ function mine() {
 					
 				R::store($player);
 				$_SESSION['player'] = serialize($player);
+				
+				$total_resources = $stone;
+				$resource_type = 'stone';
 					
-				if($old_level == $player->mining) {
-					return json(array((int)$stone,(bool)false,'stone'));
-				}
-				else {
-					return json(array((int)$stone,(bool)true, 'stone'));
-				}
+				
 				
 				break;
 				
@@ -555,12 +1008,8 @@ function mine() {
 				R::store($player);
 				$_SESSION['player'] = serialize($player);
 					
-				if($old_level == $player->mining) {
-					return json(array((int)$copper,(bool)false,'copper'));
-				}
-				else {
-					return json(array((int)$copper,(bool)true,'copper'));
-				}
+				$total_resources = $copper;
+				$resource_type = 'copper';
 				break;
 				
 			case 3:
@@ -581,12 +1030,8 @@ function mine() {
 				R::store($player);
 				$_SESSION['player'] = serialize($player);
 					
-				if($old_level == $player->mining) {
-					return json(array((int)$tin,(bool)false,'tin'));
-				}
-				else {
-					return json(array((int)$tin,(bool)true,'tin'));
-				}
+				$total_resources = $tin;
+				$resource_type = 'tin';
 				break;
 				
 			case 4: 
@@ -601,6 +1046,12 @@ function mine() {
 				//gold
 				break;
 		}
+		
+		// Globalized return so that we have a consistent interface for all mining
+		// functions
+	 	$details = array((int)$total_resources,(bool)($old_level != $player->mining),$resource_type, $player->mining_exp, $player->exp_to_mining());
+		
+		return json($details);
 	}
 }
 
@@ -654,6 +1105,15 @@ function get_chat_messages($since = 0) {
 	}
 }
 
+function post_to_chat($message) {
+	$server = new stdClass();
+	$server->username = 'Server';
+	$server->admin = 2;
+	
+	$chat = new ChatManager($message,$server);
+	$chat->execute();
+}
+
 function post_chat_message() {
 	$player = unserialize($_SESSION['player']);
 	if(array_key_exists('message',$_POST) && !empty($_POST['message'])) {
@@ -679,7 +1139,7 @@ function skillup($type) {
 				$type => (int)$player->$type,
 				'type' => $type,
 				'total_hp' => (int)$player->total_hp,
-				'damage' => (int)$player->damage(),
+				'damage' => $player->damage_uncalc(),
 				'defence' => (int)$player->defence()
 			));
 		}

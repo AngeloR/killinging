@@ -20,8 +20,8 @@ return array(
         ),
         'production' => array(
             'host' => 'localhost',
-            'user' => 'feethave_m0f45a',
-            'pass' => '51mb4',
+            'user' => '',
+            'pass' => '',
             'name' => 'feethave_rpg'
         ),
     ),
