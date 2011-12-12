@@ -3,11 +3,11 @@
 class Model_Item extends RedBean_SimpleModel {
 	
 	public function update() {
-		if(!isset($this->store_id)) {
-			$this->store_id = 1;
+		if(!isset($this->equipped)) {
+			$this->equipped = 0;
 		}
 	}
-	
+
 	public function tojson() {
 		$tmp = array (
 				'id' => $this->id,
@@ -15,9 +15,11 @@ class Model_Item extends RedBean_SimpleModel {
 				'cost' => $this->cost,
 				'level' => $this->level,
 				'str' => $this->str,
-				'def' => $this->def,
+				'tough' => $this->tough,
+				'vit' => $this->vit,
 				'agi' => $this->agi,
 				'luck' => $this->luck,
+				'icon' => $this->icon
 		);
 	
 		return $tmp;

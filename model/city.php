@@ -11,7 +11,7 @@ class Model_City extends RedBean_SimpleModel {
 	public function open() {
 		$player = unserialize($_SESSION['player']);
 		$map_size = 4;
-		$this->buildings = R::find('building','map_id = ? and (loc_x > ? and loc_x < ?) and (loc_y > ? and loc_y < ?)',array($this->id,$player->loc_x - $map_size, $player->loc_x + $map_size, $player->loc_y - $map_size, $player->loc_y + $map_size));
+		$this->buildings = R::find('building','zone_id = ? and (loc_x > ? and loc_x < ?) and (loc_y > ? and loc_y < ?)',array($this->zone,$player->loc_x - $map_size, $player->loc_x + $map_size, $player->loc_y - $map_size, $player->loc_y + $map_size));
 		
 	}
 	
@@ -30,21 +30,6 @@ class Model_City extends RedBean_SimpleModel {
 		$min_y = $center_y + $neg;
 		$max_x = $center_x + $size;
 		$max_y = $center_y + $size;
-
-		// chance to find monster!
-		$rand = rand(0,1);
-		if($rand == 1) {
-			$monsters = R::find('monster','city = ? and level <= ? and min_x <= ? and min_y <= ? and max_x >= ? and max_y >= ?', array($this->id,$player->level,$player->loc_x,$player->loc_y,$player->loc_x,$player->loc_y));
-			if(!empty($monsters)) {
-				$monster = $monsters[array_rand($monsters)];
-				unset($_SESSION['battle']);
-				
-				if(!empty($monster)) {
-					$_SESSION['battle'] = serialize($monster);
-					set('monster',$monster);
-				}
-			}
-		}
 		
 		$land_types = array_keys($this->land);
 		
@@ -60,7 +45,7 @@ class Model_City extends RedBean_SimpleModel {
 				
 				$key =	$r.','.$g.','.$b;
 				if(array_key_exists($key,$this->land)) {
-					echo '<img src="/killinging/tiles/'.$this->land[$key]['name'].'.png" width="60" height="60">';
+					echo '<img src="/tiles/'.$this->land[$key]['name'].'.png" width="60" height="60">';
 				}
 			}
 			echo '<br>';
@@ -95,15 +80,37 @@ class Model_City extends RedBean_SimpleModel {
 						return $point;
 						break;
 						
+					case 2:
+						$point = new CraftingInterface($building);
+						$point->owner = $player->id; 
+						return $point;
+						break;
+						
 					case 3:
 						$quarry = new QuarryInterface($building);
 						$quarry->owner = $player->id;
 						return $quarry;
 						break;
+						
+					case 4:
+						$tavern = new TavernInterface($building);
+						$tavern->owner = $player->id;
+						return $tavern;
+						break;
+						
+					case 5:
+						$bank = new BankInterface($building);
+						$bank->owner = $player->id;
+						return $bank;
+						break;
 				}
 			}
 		}
 		return false;
+	}
+	
+	public function interaction_point($x,$y) {
+		return $this->building_at($x,$y);
 	}
 	
 	public function building_at($x,$y) {
